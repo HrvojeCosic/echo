@@ -14,11 +14,17 @@ class Server {
     int createAndBindInetSocket();
     int createAndBindUnixSocket(const std::string &socketPath);
     void configureSockets();
+    void initInetSocketOptions(int socket);
+    void acceptNewInetConnection();
+    void acceptNewUnixConnection();
+    void handleClientData(int clientIdx);
+    void closeClientConnection(int clientIdx);
 
-    std::vector<int> clientSockets;
+    std::vector<int> socketPool;
     std::vector<struct pollfd> pollFds;
-    const int maxClients = 150;
-    const int bufferSize = 1024;
+    static constexpr int maxListeners = 5;
+    static constexpr int maxClients = 150;
+    static constexpr int bufferSize = 1024;
 
     uint16_t port;
     int inetListenSocket;
