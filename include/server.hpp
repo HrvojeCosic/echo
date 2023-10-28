@@ -6,19 +6,23 @@
 #include <string>
 #include <vector>
 
+#include "../include/response_schema.hpp"
 #include "../include/socket.hpp"
 
 namespace echoserver {
 
 using AbstractSocket = std::unique_ptr<ISocket>;
+using AbstractResponseSchema = std::unique_ptr<IResponseSchema>;
 
 class Server {
   public:
-    Server();
+    Server(AbstractResponseSchema responseSchema);
     ~Server();
 
-    void addListener(AbstractSocket listener);
     void start();
+    void addListener(AbstractSocket listener);
+
+    inline void setResponseSchema(AbstractResponseSchema schema) { responseSchema = std::move(schema); };
 
   private:
     //-----------------------------------------------------------------------------------------------------------------------------
@@ -39,6 +43,8 @@ class Server {
     const int maxListeners = 5;
     const int maxClients = 50; // denotes max number of clients per listener
     const int bufferSize = 1024;
+
+    AbstractResponseSchema responseSchema;
 
     /*
      *clientPool contains only client socket file descriptors

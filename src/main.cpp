@@ -1,8 +1,10 @@
 #include "../include/server.hpp"
 #include <iostream>
+#include <memory>
 
 int main() {
-    echoserver::Server server;
+    echoserver::Server server(std::make_unique<echoserver::PalindromeResponseSchema>());
+    server.setResponseSchema(std::make_unique<echoserver::ReverseResponseSchema>());
 
     const std::string unixSocketPath = "/tmp/unix_socket";
     const int port = 5000;

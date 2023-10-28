@@ -8,6 +8,7 @@
 #include <memory>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <ostream>
 #include <stdexcept>
 #include <sys/poll.h>
 #include <sys/socket.h>
@@ -16,7 +17,7 @@
 
 namespace echoserver {
 
-Server::Server() {
+Server::Server(AbstractResponseSchema responseSchema) : responseSchema(std::move(responseSchema)) {
     clientPool.reserve(maxClients);
     listenerPool.reserve(maxListeners);
     pollFds.reserve(maxClients + maxListeners);
@@ -89,7 +90,9 @@ void Server::handleClientData(int pollFdIdx) {
         std::cout << "Connection closed by a client " << std::endl;
     } else {
         std::string data(buffer, bytesRead);
-        std::string response = "Echo: " + data;
+        data.pop_back(); // remove newline before sending to response gen
+        responseSchema->generateResponse(data);
+        std::string response = "Echo: " + data + "\n";
         send(clientSocket, response.c_str(), response.length(), 0);
     }
 }
