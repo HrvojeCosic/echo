@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <poll.h>
+#include <stop_token>
 #include <string>
 #include <vector>
 
@@ -24,10 +25,17 @@ class Server {
 
     inline void setResponseSchema(AbstractResponseSchema schema) { responseSchema = std::move(schema); };
 
+    inline const AbstractResponseSchema &getResponseSchema() const { return responseSchema; }
+
+    inline const std::vector<AbstractSocket> &getListenerPool() const { return listenerPool; }
+
+    inline const std::vector<int> &getClientPool() const { return clientPool; }
+
   private:
     //-----------------------------------------------------------------------------------------------------------------------------
     void handleClientData(int clientIdx);
     void closeClientConnection(int clientIdx);
+    void serverCliInputHandler(std::stop_token token);
 
     /* Converts the index from pollFds to a corresponding client pool iterator. */
     inline std::vector<int>::iterator pollFdIdxToClientPoolIterator(int pollFdIdx) {
