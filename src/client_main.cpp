@@ -1,19 +1,19 @@
 #include <iostream>
 
 #include "../include/client.hpp"
+#include "../include/socket_factory.hpp"
 
 int main(int argc, char *argv[]) {
-    if (argc != 2 && argc != 3) {
+    auto clientSocket = echoserverclient::SocketFactory::createClientSocket(argc, argv);
+
+    if (clientSocket == nullptr) {
         std::string correctFormat = " (<Unix_domain_socket_address> | <Internet_domain_address> <port_number>)";
         std::cerr << "Usage: " << argv[0] << correctFormat << std::endl;
         return 1;
     }
 
-    std::string serverAddress = argv[1];
-    int serverPort = std::atoi(argv[2]);
-
-    echoclient::Client client;
-    client.start(serverAddress, serverPort);
+    echoclient::Client client(std::move(clientSocket));
+    client.start();
 
     return 0;
 }

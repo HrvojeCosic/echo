@@ -6,7 +6,7 @@
 
 namespace echoserver {
 
-AbstractResponseSchema ResponseSchemaFactory::extractSchema(const std::string &input, const uint schemaTypeOffset) {
+AbstractResponseSchema ResponseSchemaFactory::createSchema(const std::string &input, const uint schemaTypeOffset) {
     size_t spacePosition = input.find(' ', schemaTypeOffset);
     std::string schemaType = input.substr(schemaTypeOffset, spacePosition - schemaTypeOffset);
 

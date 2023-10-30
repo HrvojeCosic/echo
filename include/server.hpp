@@ -12,7 +12,6 @@
 
 namespace echoserver {
 
-using AbstractSocket = std::unique_ptr<ISocket>;
 using AbstractResponseSchema = std::unique_ptr<IResponseSchema>;
 
 class Server {
@@ -21,13 +20,13 @@ class Server {
 
     void start();
     void closeServer();
-    void addListener(AbstractSocket listener);
+    void addListener(echoserverclient::AbstractSocket listener);
 
     inline void setResponseSchema(AbstractResponseSchema schema) { responseSchema = std::move(schema); };
 
     inline const AbstractResponseSchema &getResponseSchema() const { return responseSchema; }
 
-    inline const std::vector<AbstractSocket> &getListenerPool() const { return listenerPool; }
+    inline const std::vector<echoserverclient::AbstractSocket> &getListenerPool() const { return listenerPool; }
 
     inline const std::vector<int> &getClientPool() const { return clientPool; }
 
@@ -65,7 +64,7 @@ class Server {
      *listenerPool contains only the listener objects
      *this means that their indices will correspond to elements at the same index in pollFds
      */
-    std::vector<AbstractSocket> listenerPool;
+    std::vector<echoserverclient::AbstractSocket> listenerPool;
 
     /*
      *pollFds contain all socket file descriptors, first number (equal to the number of listeners) of them being

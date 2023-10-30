@@ -3,17 +3,20 @@
 #include <stop_token>
 #include <string>
 
+#include "./socket.hpp"
+
 namespace echoclient {
 
 class Client {
   public:
-    Client() : clientSocket(-1){};
+    Client(echoserverclient::AbstractSocket socket) : clientSocket(std::move(socket)){};
 
-    void start(const std::string &serverAddress, int serverPort = -1);
-    void closeClient();
+    void start();
     void cliInputHandler(std::stop_token token);
 
   private:
-    int clientSocket;
+    const int bufferSize = 1024;
+
+    echoserverclient::AbstractSocket clientSocket;
 };
 } // namespace echoclient

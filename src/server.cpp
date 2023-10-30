@@ -35,7 +35,7 @@ Server::Server(AbstractResponseSchema responseSchema) : responseSchema(std::move
 }
 
 void Server::closeServer() {
-    for (AbstractSocket &listenerSock : listenerPool) {
+    for (echoserverclient::AbstractSocket &listenerSock : listenerPool) {
         listenerSock->destroy();
     }
 
@@ -46,7 +46,7 @@ void Server::closeServer() {
     }
 }
 
-void Server::addListener(AbstractSocket listener) {
+void Server::addListener(echoserverclient::AbstractSocket listener) {
     int listenSocket = listener->createAndBind();
     listener->initOptions(listenSocket);
 
@@ -61,7 +61,7 @@ void Server::cliInputHandler(std::stop_token token) {
 
         std::string keyword = "--change-response-schema ";
         if (userInput.find(keyword) == 0) {
-            auto responseSchema = ResponseSchemaFactory::extractSchema(userInput, keyword.length());
+            auto responseSchema = ResponseSchemaFactory::createSchema(userInput, keyword.length());
             if (responseSchema != nullptr) {
                 setResponseSchema(std::move(responseSchema));
                 std::cout << "Response schema has been changed" << std::endl;
@@ -78,8 +78,8 @@ void Server::start() {
     std::signal(SIGINT, signalHandler);
     std::signal(SIGTERM, signalHandler);
 
-    for (AbstractSocket &listener : listenerPool) {
-        listen(listener->getListenSocket(), maxClients);
+    for (echoserverclient::AbstractSocket &listener : listenerPool) {
+        listen(listener->getsocketFd(), maxClients);
     }
 
     while (!serverShutdownRequested) {

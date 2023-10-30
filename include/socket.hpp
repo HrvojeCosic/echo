@@ -1,22 +1,26 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
-namespace echoserver {
+#define INVALID_SOCKET_FD -1
+
+namespace echoserverclient {
 
 class ISocket {
   public:
-    virtual ~ISocket() {}
+    ISocket() : socketFd(INVALID_SOCKET_FD){};
 
     virtual int createAndBind() = 0;
     virtual void initOptions(int socketFd) = 0;
     virtual int setupNewConnection() = 0;
     virtual void destroy() = 0;
+    virtual void connectToServer(const std::string &serverAddress) = 0;
 
-    inline virtual int getListenSocket() const { return listenSocket; };
+    inline virtual int getsocketFd() const { return socketFd; };
 
   protected:
-    int listenSocket;
+    int socketFd;
 };
 
 class UnixSocket : public ISocket {
@@ -27,6 +31,7 @@ class UnixSocket : public ISocket {
     void initOptions(int socketFd) override;
     int setupNewConnection() override;
     void destroy() override;
+    void connectToServer(const std::string &serverAddress) override;
 
   private:
     const std::string socketPath;
@@ -40,8 +45,11 @@ class InetSocket : public ISocket {
     void initOptions(int socketFd) override;
     int setupNewConnection() override;
     void destroy() override;
+    void connectToServer(const std::string &serverAddress) override;
 
   private:
     int port;
 };
-} // namespace echoserver
+
+using AbstractSocket = std::unique_ptr<echoserverclient::ISocket>;
+} // namespace echoserverclient

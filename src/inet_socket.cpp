@@ -9,16 +9,16 @@
 
 #include "../include/socket.hpp"
 
-namespace echoserver {
+namespace echoserverclient {
 
 int InetSocket::createAndBind() {
-    listenSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (listenSocket == -1) {
+    socketFd = socket(AF_INET, SOCK_STREAM, 0);
+    if (socketFd == INVALID_SOCKET_FD) {
         throw std::runtime_error("Failed to create the listening socket");
     }
 
     int enable = 1;
-    if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) == -1) {
+    if (setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) == -1) {
         throw std::runtime_error("Failed to set socket options");
     }
 
@@ -28,11 +28,11 @@ int InetSocket::createAndBind() {
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     serverAddr.sin_port = htons(port);
 
-    if (bind(listenSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
+    if (bind(socketFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
         throw std::runtime_error("Failed to bind the internet domain listening socket");
     }
 
-    return listenSocket;
+    return socketFd;
 }
 
 int InetSocket::setupNewConnection() {
@@ -41,8 +41,8 @@ int InetSocket::setupNewConnection() {
 
         socklen_t clientAddrLen = sizeof(clientAddr);
 
-        int clientSocket = accept(listenSocket, (struct sockaddr *)&clientAddr, &clientAddrLen);
-        if (clientSocket == -1) {
+        int clientSocket = accept(socketFd, (struct sockaddr *)&clientAddr, &clientAddrLen);
+        if (clientSocket == INVALID_SOCKET_FD) {
             if (errno == EWOULDBLOCK || errno == EAGAIN) {
                 return clientSocket; // No more incoming connections
             } else {
@@ -61,7 +61,7 @@ int InetSocket::setupNewConnection() {
 }
 
 void InetSocket::initOptions(int socket) {
-    if (fcntl(listenSocket, F_SETFL, O_NONBLOCK) == -1) {
+    if (fcntl(socketFd, F_SETFL, O_NONBLOCK) == -1) {
         throw std::runtime_error("Failed to set the listening internet socket to non-blocking mode");
     }
 
@@ -71,5 +71,26 @@ void InetSocket::initOptions(int socket) {
     }
 }
 
-void InetSocket::destroy() { close(listenSocket); }
-} // namespace echoserver
+void InetSocket::destroy() {
+    if (socketFd != INVALID_SOCKET_FD) {
+        close(socketFd);
+        socketFd = INVALID_SOCKET_FD;
+    }
+}
+
+void InetSocket::connectToServer(const std::string &serverAddress) {
+    socketFd = socket(AF_INET, SOCK_STREAM, 0);
+
+    struct sockaddr_in serverSockAddr {};
+
+    serverSockAddr.sin_family = AF_INET;
+    serverSockAddr.sin_port = htons(port);
+    inet_pton(AF_INET, serverAddress.c_str(), &serverSockAddr.sin_addr);
+
+    if (connect(socketFd, (struct sockaddr *)&serverSockAddr, sizeof(serverSockAddr)) == -1) {
+        std::cerr << "Failed to connect to the Internet server." << std::endl;
+        destroy();
+        return;
+    }
+}
+} // namespace echoserverclient
