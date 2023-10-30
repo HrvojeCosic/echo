@@ -3,7 +3,7 @@
 #=================================================================================================================
 VPATH=     . src
 INCDIRS=   . ./include
-BINARY=    bin
+BINARY=    echo_server echo_client
 BUILD_DIR= build
 TEST_DIR=  test
 CXX=       g++
@@ -14,7 +14,7 @@ CPP_VER=   -std=c++20
 #### FLAGS & FILES
 #=================================================================================================================
 DEPFLAGS=-MP -MD #Generate files including make rules for .h deps
-FLAGS=-Wall -Wextra -Wno-missing-braces -g $(foreach dir,$(INCDIRS),-I$(dir)) $(OPT) $(DEPFLAGS)
+CFLAGS=-Wall -Wextra -Wno-missing-braces -g $(foreach dir,$(INCDIRS),-I$(dir)) $(OPT) $(DEPFLAGS)
 
 CPPFILES= $(foreach dir, $(VPATH), $(wildcard $(dir)/*.cpp))
 OFILES=   $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(notdir $(CPPFILES)))
@@ -28,11 +28,14 @@ DEPFILES= $(patsubst %.c, %.d, $(CFILES)) $(patsubst %.cpp, %.d, $(CPPFILES))
 #=================================================================================================================
 all: $(BINARY) format
 
-$(BINARY): $(OFILES)
-	$(CXX) $(FLAGS) -o $@ $^
+echo_server: $(filter-out $(BUILD_DIR)/client_main.o, $(OFILES))
+	$(CXX) $(CFLAGS) -o $@ $^
+
+echo_client: $(filter-out $(BUILD_DIR)/server_main.o, $(OFILES))
+	$(CXX) $(CFLAGS) -o $@ $^
 
 $(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
-	$(CXX) $(CPP_VER) $(FLAGS) -c $< -o $@ 
+	$(CXX) $(CPP_VER) $(CFLAGS) -c $< -o $@ 
 
 $(BUILD_DIR): 
 	mkdir $@
@@ -49,7 +52,7 @@ test: $(TEST_DIR)/bin $(TESTBINS) format
 	@for test in $(TESTBINS) ; do ./$$test ; done
 
 $(TEST_DIR)/bin/%: $(TEST_DIR)/%.cpp $(CPPFILES) $(HPPFILES)
-	$(CXX) $(CPP_VER) $(FLAGS) -o $@ $< $(filter-out src/main.cpp,$(CPPFILES)) $(GTEST_LIBS) $(TESTFLAGS)
+	$(CXX) $(CPP_VER) $(CFLAGS) -o $@ $< $(filter-out src/main.cpp,$(CPPFILES)) $(GTEST_LIBS) $(TESTFLAGS)
 
 $(TEST_DIR)/bin:
 	mkdir -p $@

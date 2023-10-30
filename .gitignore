@@ -1,3 +1,4 @@
 build
-bin
+echo_client
+echo_server
 todo.txt
