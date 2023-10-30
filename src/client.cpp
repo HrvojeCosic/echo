@@ -1,5 +1,7 @@
 #include <arpa/inet.h>
+#include <condition_variable>
 #include <csignal>
+#include <cstdio>
 #include <fcntl.h>
 #include <iostream>
 #include <netinet/in.h>
@@ -7,6 +9,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <thread>
+#include <unistd.h>
 
 #include "../include/client.hpp"
 
@@ -25,11 +28,12 @@ void Client::cliInputHandler(std::stop_token token) {
 
     while (!token.stop_requested()) {
         std::string userInput;
-        std::cout << "Enter a message to send to the server: ";
         std::getline(std::cin, userInput);
 
-        if (userInput.length() == 0)
+        if (userInput.length() == 0) {
             signalHandler(SIGTERM);
+            break;
+        }
 
         send(clientSocket->getsocketFd(), userInput.c_str(), userInput.length(), 0);
         int bytesRead = recv(clientSocket->getsocketFd(), buffer, sizeof(buffer), 0);
@@ -59,7 +63,12 @@ void Client::start() {
             std::cout << "\nClient closed. Press enter to continue." << std::endl;
             break;
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
+
+    clientSocket->destroy();
+    userInput.request_stop();
+    std::cout << "\nClient closed." << std::endl;
 }
 
 } // namespace echoclient
