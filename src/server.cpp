@@ -34,7 +34,7 @@ Server::Server(AbstractResponseSchema responseSchema) : responseSchema(std::move
     pollFds.reserve(maxClients + maxListeners);
 }
 
-Server::~Server() {
+void Server::closeServer() {
     for (AbstractSocket &listenerSock : listenerPool) {
         listenerSock->destroy();
     }
@@ -54,7 +54,7 @@ void Server::addListener(AbstractSocket listener) {
     listenerPool.emplace_back(std::move(listener));
 }
 
-void Server::serverCliInputHandler(std::stop_token token) {
+void Server::cliInputHandler(std::stop_token token) {
     while (!token.stop_requested()) {
         std::string userInput;
         std::getline(std::cin, userInput);
@@ -73,7 +73,7 @@ void Server::serverCliInputHandler(std::stop_token token) {
 }
 
 void Server::start() {
-    std::jthread userInput([this](std::stop_token st) { this->serverCliInputHandler(st); });
+    std::jthread userInput([this](std::stop_token st) { this->cliInputHandler(st); });
 
     std::signal(SIGINT, signalHandler);
     std::signal(SIGTERM, signalHandler);
@@ -109,7 +109,8 @@ void Server::start() {
     }
 
     userInput.request_stop();
-    std::cout << std::endl << "Shutting down the server... press any key to continue" << std::endl;
+    std::cout << std::endl << "Shutting down the server... press enter to continue" << std::endl;
+    closeServer();
 }
 
 void Server::handleClientData(int pollFdIdx) {
@@ -127,9 +128,8 @@ void Server::handleClientData(int pollFdIdx) {
         std::cout << "Connection closed by a client " << std::endl;
     } else {
         std::string data(buffer, bytesRead);
-        data.pop_back(); // remove newline before sending to response gen
         responseSchema->generateResponse(data);
-        std::string response = "Echo: " + data + "\n";
+        std::string response = data + "\n";
         send(clientSocket, response.c_str(), response.length(), 0);
     }
 }

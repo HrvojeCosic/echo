@@ -18,9 +18,9 @@ using AbstractResponseSchema = std::unique_ptr<IResponseSchema>;
 class Server {
   public:
     Server(AbstractResponseSchema responseSchema);
-    ~Server();
 
     void start();
+    void closeServer();
     void addListener(AbstractSocket listener);
 
     inline void setResponseSchema(AbstractResponseSchema schema) { responseSchema = std::move(schema); };
@@ -35,11 +35,11 @@ class Server {
     //-----------------------------------------------------------------------------------------------------------------------------
     void handleClientData(int clientIdx);
     void closeClientConnection(int clientIdx);
-    void serverCliInputHandler(std::stop_token token);
+    void cliInputHandler(std::stop_token token);
 
     /* Converts the index from pollFds to a corresponding client pool iterator. */
     inline std::vector<int>::iterator pollFdIdxToClientPoolIterator(int pollFdIdx) {
-        return clientPool.begin() + pollFdIdx - listenerPool.size() - 1;
+        return clientPool.begin() + pollFdIdx - listenerPool.size();
     }
 
     /* Gets the next iterator with the position for the next listener socket insertion into pollFds */
