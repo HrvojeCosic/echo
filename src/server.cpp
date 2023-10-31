@@ -32,6 +32,9 @@ Server::Server() : responseSchema(std::make_unique<EquivalentResponseSchema>()) 
     clientPool.reserve(maxClients);
     listenerPool.reserve(maxListeners);
     pollFds.reserve(maxClients + maxListeners);
+
+    inputToCommand["--change-response-schema"] = std::make_unique<ResponseSchemaCliCommand>(*this);
+    inputToCommand["--help"] = std::make_unique<ServerHelpCliCommand>(*this);
 }
 
 Server::~Server() {
@@ -64,15 +67,15 @@ void Server::cliInputHandler(std::stop_token token) {
         std::string userInput;
         std::getline(std::cin, userInput);
 
-        std::string keyword = "--change-response-schema ";
-        if (userInput.find(keyword) == 0) {
-            auto responseSchema = ResponseSchemaFactory::createSchema(userInput, keyword.length());
-            if (responseSchema != nullptr) {
-                setResponseSchema(std::move(responseSchema));
-                std::cout << "Response schema has been changed" << std::endl;
-            } else {
-                std::cout << "Unknown response schema type or incorrect schema configuration" << std::endl;
-            }
+        if (userInput.length() == 0)
+            continue;
+
+        std::vector<std::string> tokens;
+        echoserverclient::CliCommand<Server>::tokenizeCliInput(userInput, ' ', tokens);
+        if (inputToCommand.contains(tokens[0])) {
+            inputToCommand[tokens[0]]->execute(tokens);
+        } else {
+            inputToCommand["--help"]->execute(tokens);
         }
     }
 }

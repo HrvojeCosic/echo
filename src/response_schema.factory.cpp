@@ -6,9 +6,9 @@
 
 namespace echoserver {
 
-AbstractResponseSchema ResponseSchemaFactory::createSchema(const std::string &input, const uint schemaTypeOffset) {
-    size_t spacePosition = input.find(' ', schemaTypeOffset);
-    std::string schemaType = input.substr(schemaTypeOffset, spacePosition - schemaTypeOffset);
+//TODO: make Token class to give names to tokens[1], tokens[2] etc.
+AbstractResponseSchema ResponseSchemaFactory::createSchema(const std::vector<std::string> &tokens) {
+    std::string schemaType = tokens[1];
 
     if (schemaType == "EQUIVALENT") {
         return std::make_unique<EquivalentResponseSchema>();
@@ -16,10 +16,10 @@ AbstractResponseSchema ResponseSchemaFactory::createSchema(const std::string &in
         return std::make_unique<ReverseResponseSchema>();
     } else if (schemaType == "CENSORED") {
         std::string keyword = "CHAR=";
-        size_t keywordPosition = input.find(keyword);
+        size_t keywordPosition = tokens[2].find(keyword);
         char censoredChar;
         if (keywordPosition != std::string::npos) {
-            censoredChar = input[keywordPosition + keyword.length()];
+            censoredChar = tokens[2][keywordPosition + keyword.length()];
         } else {
             return nullptr;
         }

@@ -5,14 +5,19 @@
 #include <poll.h>
 #include <stop_token>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
-#include "../include/response_schema.hpp"
-#include "../include/socket.hpp"
+#include "./cli_command.hpp"
+#include "./response_schema.hpp"
+#include "./socket.hpp"
 
 namespace echoserver {
 
+using AbstractCliCommand = std::unique_ptr<echoserverclient::CliCommand<Server>>;
 using AbstractResponseSchema = std::unique_ptr<IResponseSchema>;
+using ResponseSchemaCliCommand = echoserverclient::ChangeResponseSchemaCliCommand;
+using ServerHelpCliCommand = echoserverclient::HelpCliCommand<Server>;
 
 class Server {
   public:
@@ -57,7 +62,11 @@ class Server {
     const int maxClients = 50; // denotes max number of clients per listener
     const int bufferSize = 1024;
 
+    /* Response schema dictates the way server is going to respond in */
     AbstractResponseSchema responseSchema;
+
+    /* inputToCommand maps user CLI inputs to their respective commands that hold command executors */
+    std::unordered_map<std::string, AbstractCliCommand> inputToCommand;
 
     /*
      *clientPool contains only client socket file descriptors

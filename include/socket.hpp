@@ -10,6 +10,7 @@ namespace echoserverclient {
 class ISocket {
   public:
     ISocket() : socketFd(INVALID_SOCKET_FD){};
+    virtual ~ISocket(){};
 
     virtual int createAndBind() = 0;
     virtual void initOptions(int socketFd) = 0;

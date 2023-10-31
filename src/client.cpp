@@ -1,15 +1,8 @@
-#include <arpa/inet.h>
 #include <condition_variable>
 #include <csignal>
-#include <cstdio>
-#include <fcntl.h>
 #include <iostream>
-#include <netinet/in.h>
 #include <stop_token>
-#include <sys/socket.h>
-#include <sys/un.h>
 #include <thread>
-#include <unistd.h>
 
 #include "../include/client.hpp"
 
@@ -19,7 +12,12 @@ std::atomic_flag clientShutdownFlag = ATOMIC_FLAG_INIT;
 std::condition_variable clientShutdownCV;
 std::mutex clientShutdownMutex;
 
-void signalHandler(int signum) {
+Client::Client(echoserverclient::AbstractSocket socket) : clientSocket(std::move(socket)) {
+    inputToCommand["--help"] = std::make_unique<ClientHelpCliCommand>(*this);
+    inputToCommand["send-to-server"] = std::make_unique<SendToServerCliCommand>(*this);
+};
+
+void Client::signalHandler(int signum) {
     if (signum == SIGINT || signum == SIGTERM) {
         clientShutdownFlag.test_and_set();
         clientShutdownCV.notify_all();
@@ -27,29 +25,22 @@ void signalHandler(int signum) {
 }
 
 void Client::cliInputHandler(std::stop_token token) {
-    char buffer[bufferSize];
-
     while (!token.stop_requested()) {
         std::string userInput;
         std::getline(std::cin, userInput);
 
         if (userInput.length() == 0) {
-            signalHandler(SIGTERM);
+            Client::signalHandler(SIGTERM);
             break;
         }
 
-        send(clientSocket->getsocketFd(), userInput.c_str(), userInput.length(), 0);
-        int bytesRead = recv(clientSocket->getsocketFd(), buffer, sizeof(buffer), 0);
-
-        if (bytesRead <= 0) {
-            std::cerr << "Connection to the server terminated." << std::endl;
-            clientSocket->destroy();
-            signalHandler(SIGTERM);
-            break;
+        std::vector<std::string> tokens;
+        echoserverclient::CliCommand<Client>::tokenizeCliInput(userInput, ' ', tokens);
+        if (inputToCommand.contains(tokens[0])) {
+            inputToCommand[tokens[0]]->execute(tokens);
+        } else {
+            inputToCommand["send-to-server"]->execute(tokens);
         }
-
-        std::string response(buffer, bytesRead);
-        std::cout << "Server Response: " << response << std::endl;
     }
 }
 
