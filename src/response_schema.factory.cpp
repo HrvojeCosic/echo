@@ -10,7 +10,9 @@ AbstractResponseSchema ResponseSchemaFactory::createSchema(const std::string &in
     size_t spacePosition = input.find(' ', schemaTypeOffset);
     std::string schemaType = input.substr(schemaTypeOffset, spacePosition - schemaTypeOffset);
 
-    if (schemaType == "REVERSE") {
+    if (schemaType == "EQUIVALENT") {
+        return std::make_unique<EquivalentResponseSchema>();
+    } else if (schemaType == "REVERSE") {
         return std::make_unique<ReverseResponseSchema>();
     } else if (schemaType == "CENSORED") {
         std::string keyword = "CHAR=";

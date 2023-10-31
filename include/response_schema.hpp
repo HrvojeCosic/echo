@@ -11,6 +11,11 @@ class IResponseSchema {
     virtual void generateResponse(std::string &message) = 0;
 };
 
+class EquivalentResponseSchema : public IResponseSchema {
+  public:
+    void generateResponse(std::string &message) override;
+};
+
 class ReverseResponseSchema : public IResponseSchema {
   public:
     void generateResponse(std::string &message) override;

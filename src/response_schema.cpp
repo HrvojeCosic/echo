@@ -5,6 +5,8 @@
 
 namespace echoserver {
 
+void EquivalentResponseSchema::generateResponse([[maybe_unused]] std::string &message) { return; }
+
 void ReverseResponseSchema::generateResponse(std::string &message) { std::reverse(message.begin(), message.end()); }
 
 void CensoredResponseSchema::generateResponse(std::string &message) {
