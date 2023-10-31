@@ -15,11 +15,14 @@
 
 namespace echoclient {
 
-volatile std::sig_atomic_t clientShutdownRequested = false;
+std::atomic_flag clientShutdownFlag = ATOMIC_FLAG_INIT;
+std::condition_variable clientShutdownCV;
+std::mutex clientShutdownMutex;
 
 void signalHandler(int signum) {
     if (signum == SIGINT || signum == SIGTERM) {
-        clientShutdownRequested = true;
+        clientShutdownFlag.test_and_set();
+        clientShutdownCV.notify_all();
     }
 }
 
@@ -56,15 +59,8 @@ void Client::start() {
 
     std::jthread userInput([this](std::stop_token st) { this->cliInputHandler(st); });
 
-    while (true) {
-        if (clientShutdownRequested) {
-            clientSocket->destroy();
-            userInput.request_stop();
-            std::cout << "\nClient closed. Press enter to continue." << std::endl;
-            break;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    }
+    std::unique_lock<std::mutex> lock(clientShutdownMutex);
+    clientShutdownCV.wait(lock, [] { return clientShutdownFlag.test(); });
 
     clientSocket->destroy();
     userInput.request_stop();
