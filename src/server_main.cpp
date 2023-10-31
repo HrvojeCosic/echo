@@ -3,7 +3,7 @@
 #include <memory>
 
 int main() {
-    echoserver::Server server(std::make_unique<echoserver::ReverseResponseSchema>());
+    auto &server = echoserver::Server::getInstance();
 
     const std::string unixSocketPath = "/tmp/unix_socket";
     const int port = 6000;

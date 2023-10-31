@@ -28,13 +28,13 @@ void signalHandler(int signum) {
     }
 }
 
-Server::Server(AbstractResponseSchema responseSchema) : responseSchema(std::move(responseSchema)) {
+Server::Server() : responseSchema(std::make_unique<EquivalentResponseSchema>()) {
     clientPool.reserve(maxClients);
     listenerPool.reserve(maxListeners);
     pollFds.reserve(maxClients + maxListeners);
 }
 
-void Server::closeServer() {
+Server::~Server() {
     for (echoserverclient::AbstractSocket &listenerSock : listenerPool) {
         listenerSock->destroy();
     }
@@ -44,6 +44,11 @@ void Server::closeServer() {
             close(clientSock);
         }
     }
+}
+
+Server &Server::getInstance() {
+    static Server instance;
+    return instance;
 }
 
 void Server::addListener(echoserverclient::AbstractSocket listener) {
@@ -110,7 +115,6 @@ void Server::start() {
 
     userInput.request_stop();
     std::cout << std::endl << "Shutting down the server... press enter to continue" << std::endl;
-    closeServer();
 }
 
 void Server::handleClientData(int pollFdIdx) {

@@ -16,10 +16,14 @@ using AbstractResponseSchema = std::unique_ptr<IResponseSchema>;
 
 class Server {
   public:
-    Server(AbstractResponseSchema responseSchema);
+    ~Server();
+    Server(Server &) = delete;
+    void operator=(const Server &) = delete;
+    Server(Server &&) = delete;
+    Server &operator=(Server &&) = delete;
 
+    static Server &getInstance();
     void start();
-    void closeServer();
     void addListener(echoserverclient::AbstractSocket listener);
 
     inline void setResponseSchema(AbstractResponseSchema schema) { responseSchema = std::move(schema); };
@@ -31,6 +35,8 @@ class Server {
     inline const std::vector<int> &getClientPool() const { return clientPool; }
 
   private:
+    Server();
+
     //-----------------------------------------------------------------------------------------------------------------------------
     void handleClientData(int clientIdx);
     void closeClientConnection(int clientIdx);
