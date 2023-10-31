@@ -18,6 +18,7 @@ using AbstractCliCommand = std::unique_ptr<echoserverclient::CliCommand<Server>>
 using AbstractResponseSchema = std::unique_ptr<IResponseSchema>;
 using ResponseSchemaCliCommand = echoserverclient::ChangeResponseSchemaCliCommand;
 using ServerHelpCliCommand = echoserverclient::HelpCliCommand<Server>;
+using InputToCommandType = std::unordered_map<std::string, AbstractCliCommand>;
 
 class Server {
   public:
@@ -32,6 +33,7 @@ class Server {
 
     void start();
     void addListener(echoserverclient::AbstractSocket listener);
+    bool executeCommand(std::string command, std::vector<std::string> &tokens);
 
     inline void setResponseSchema(AbstractResponseSchema schema) { responseSchema = std::move(schema); };
 
@@ -68,7 +70,7 @@ class Server {
     AbstractResponseSchema responseSchema;
 
     /* inputToCommand maps user CLI inputs to their respective commands that hold command executors */
-    std::unordered_map<std::string, AbstractCliCommand> inputToCommand;
+    InputToCommandType inputToCommand;
 
     /*
      *clientPool contains only client socket file descriptors

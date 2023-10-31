@@ -1,16 +1,12 @@
-#include "../include/server.hpp"
 #include <iostream>
 #include <memory>
+#include <unordered_map>
 
-int main() {
-    auto &server = echoserver::Server::getInstance();
+#include "../include/server.hpp"
+#include "../include/socket_factory.hpp"
 
-    const std::string unixSocketPath = "/tmp/unix_socket";
-    const int port = 6000;
-    auto unixSock = std::make_unique<echoserverclient::UnixSocket>(unixSocketPath);
-    auto inetSock = std::make_unique<echoserverclient::InetSocket>(port);
-
-    server.addListener(std::move(unixSock));
-    server.addListener(std::move(inetSock));
+int main(int argc, char *argv[]) {
+    auto &server = echoserverclient::SocketFactory::createServer(argc, argv);
     server.start();
+    return 0;
 }

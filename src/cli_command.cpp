@@ -47,7 +47,7 @@ void ChangeResponseSchemaCliCommand::execute(const std::vector<std::string> &tok
     auto responseSchema = echoserver::ResponseSchemaFactory::createSchema(tokens);
     if (responseSchema != nullptr) {
         app.setResponseSchema(std::move(responseSchema));
-        std::cout << "Response schema has been changed" << std::endl;
+        std::cout << "Response schema has been set" << std::endl;
     } else {
         std::cout << "Unknown response schema type or incorrect schema configuration" << std::endl;
     }

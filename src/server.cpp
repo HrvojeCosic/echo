@@ -33,7 +33,7 @@ Server::Server() : responseSchema(std::make_unique<EquivalentResponseSchema>()) 
     listenerPool.reserve(maxListeners);
     pollFds.reserve(maxClients + maxListeners);
 
-    inputToCommand["--change-response-schema"] = std::make_unique<ResponseSchemaCliCommand>(*this);
+    inputToCommand["--set-response-schema"] = std::make_unique<ResponseSchemaCliCommand>(*this);
     inputToCommand["--help"] = std::make_unique<ServerHelpCliCommand>(*this);
 }
 
@@ -60,6 +60,16 @@ void Server::addListener(echoserverclient::AbstractSocket listener) {
 
     pollFds.emplace(getNextListenerPollFdsIterator(), pollfd{listenSocket, POLLIN, 0});
     listenerPool.emplace_back(std::move(listener));
+}
+
+bool Server::executeCommand(std::string command, std::vector<std::string> &tokens) {
+    bool exists = inputToCommand.find(command) != inputToCommand.end();
+
+    if (exists) {
+        inputToCommand[command]->execute(tokens);
+    }
+
+    return exists;
 }
 
 void Server::cliInputHandler(std::stop_token token) {
