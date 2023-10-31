@@ -24,6 +24,16 @@ void Client::signalHandler(int signum) {
     }
 }
 
+bool Client::executeCommand(std::string command, std::vector<std::string> &tokens) {
+    bool exists = inputToCommand.find(command) != inputToCommand.end();
+
+    if (exists) {
+        inputToCommand[command]->execute(tokens);
+    }
+
+    return exists;
+}
+
 void Client::cliInputHandler(std::stop_token token) {
     while (!token.stop_requested()) {
         std::string userInput;

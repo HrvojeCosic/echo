@@ -7,8 +7,9 @@ int main(int argc, char *argv[]) {
     auto clientSocket = echoserverclient::SocketFactory::createClientSocket(argc, argv);
 
     if (clientSocket == nullptr) {
-        std::string correctFormat = " (<Unix_domain_socket_address> | <Internet_domain_address> <port_number>)";
-        std::cerr << "Usage: " << argv[0] << correctFormat << std::endl;
+        echoclient::Client client(nullptr);
+        std::vector<std::string> tokens;
+        client.executeCommand("--help", tokens);
         return 1;
     }
 

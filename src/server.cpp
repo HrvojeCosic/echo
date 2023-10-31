@@ -100,6 +100,7 @@ void Server::start() {
         listen(listener->getsocketFd(), maxClients);
     }
 
+    std::cout << "Server started." << std::endl;
     while (!serverShutdownRequested) {
         int numReady = poll(pollFds.data(), pollFds.size(), -1);
 

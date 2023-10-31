@@ -36,10 +36,18 @@ CLI_COMMAND_TYPE std::string CliCommand<APP_T>::detokenizeCliInput(char delimite
 
 // TODO: maybe support futher help parameters (e.g --help change-response-schema)?
 CLI_COMMAND_TYPE void HelpCliCommand<APP_T>::execute([[maybe_unused]] const std::vector<std::string> &tokens) const {
-    if (std::same_as<APP_T, echoserver::Server>) {
-        std::cout << "help server: " << std::endl;
-    } else if (std::same_as<APP_T, echoclient::Client>) {
-        std::cout << "help client: " << std::endl;
+    if constexpr (std::same_as<APP_T, echoserver::Server>) {
+        std::cout << "Usage: " << std::endl;
+        std::cout << "On startup: "
+                  << "./echo_server [OPTION]" << std::endl;
+        std::cout << "During runtime: "
+                  << "./echo_server [OPTION]" << std::endl;
+        std::cout << "--set-response-schema "
+                  << "EQUIVALENT/REVERSE/CENSORED CHAR=c/PALINDROME" << std::endl;
+    } else if constexpr (std::same_as<APP_T, echoclient::Client>) {
+        std::string correctFormat = " (<Unix_domain_socket_address> | <Internet_domain_address> <port_number>)";
+        std::cout << "Usage: "
+                  << "./echo_client " << correctFormat << std::endl;
     }
 }
 
