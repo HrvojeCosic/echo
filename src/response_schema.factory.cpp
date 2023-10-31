@@ -6,7 +6,7 @@
 
 namespace echoserver {
 
-//TODO: make Token class to give names to tokens[1], tokens[2] etc.
+// TODO: make Token class to give names to tokens[1], tokens[2] etc.
 AbstractResponseSchema ResponseSchemaFactory::createSchema(const std::vector<std::string> &tokens) {
     std::string schemaType = tokens[1];
 

@@ -22,7 +22,7 @@ namespace echoserver {
 
 volatile std::sig_atomic_t serverShutdownRequested = false;
 
-void signalHandler(int signum) {
+void Server::signalHandler(int signum) {
     if (signum == SIGINT || signum == SIGTERM) {
         serverShutdownRequested = true;
     }
@@ -83,8 +83,8 @@ void Server::cliInputHandler(std::stop_token token) {
 void Server::start() {
     std::jthread userInput([this](std::stop_token st) { this->cliInputHandler(st); });
 
-    std::signal(SIGINT, signalHandler);
-    std::signal(SIGTERM, signalHandler);
+    std::signal(SIGINT, Server::signalHandler);
+    std::signal(SIGTERM, Server::signalHandler);
 
     for (echoserverclient::AbstractSocket &listener : listenerPool) {
         listen(listener->getsocketFd(), maxClients);

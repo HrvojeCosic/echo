@@ -28,6 +28,8 @@ class Server {
     Server &operator=(Server &&) = delete;
 
     static Server &getInstance();
+    static void signalHandler(int signum);
+
     void start();
     void addListener(echoserverclient::AbstractSocket listener);
 
