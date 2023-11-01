@@ -1,5 +1,6 @@
 #include <cstring>
 #include <iostream>
+#include <memory>
 
 #include "../include/socket_factory.hpp"
 
@@ -29,15 +30,12 @@ AbstractSocket SocketFactory::createClientSocket(int argc, char *argv[]) {
 echoserver::Server &SocketFactory::createServer(int argc, char *argv[]) {
     auto &server = echoserver::Server::getInstance();
 
-    std::vector<std::string> tokens;
-    tokens.reserve(argc);
-    if (argc >= 2) {
-        for (int i = 1; i < argc; i++) {
-            tokens.emplace_back(argv[i]);
-        }
-
-        if (server.executeCommand(tokens[0], tokens) == false) {
-            server.executeCommand("--help", tokens);
+    std::vector<std::string> allArgs(argv, argv + argc);
+    auto tokens = std::make_unique<StartupTokens>(allArgs);
+    auto optionTok = tokens->getOption();
+    if (!optionTok.empty()) {
+        if (server.executeCommand(optionTok, std::move(tokens)) == false) {
+            server.executeCommand("--help", std::move(tokens));
         }
     }
 

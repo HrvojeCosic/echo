@@ -24,11 +24,11 @@ void Client::signalHandler(int signum) {
     }
 }
 
-bool Client::executeCommand(std::string command, std::vector<std::string> &tokens) {
+bool Client::executeCommand(std::string command, echoserverclient::AbstractTokens tokens) {
     bool exists = inputToCommand.find(command) != inputToCommand.end();
 
     if (exists) {
-        inputToCommand[command]->execute(tokens);
+        inputToCommand[command]->execute(std::move(tokens));
     }
 
     return exists;
@@ -44,12 +44,12 @@ void Client::cliInputHandler(std::stop_token token) {
             break;
         }
 
-        std::vector<std::string> tokens;
-        echoserverclient::CliCommand<Client>::tokenizeCliInput(userInput, ' ', tokens);
-        if (inputToCommand.contains(tokens[0])) {
-            inputToCommand[tokens[0]]->execute(tokens);
+        auto tokens = std::make_unique<echoserverclient::RuntimeTokens>(userInput, ' ');
+        auto optionToken = tokens->getOption();
+        if (inputToCommand.contains(optionToken)) {
+            inputToCommand[optionToken]->execute(std::move(tokens));
         } else {
-            inputToCommand["send-to-server"]->execute(tokens);
+            inputToCommand["send-to-server"]->execute(std::move(tokens));
         }
     }
 }

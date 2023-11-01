@@ -9,6 +9,6 @@ namespace echoserver {
 
 class ResponseSchemaFactory {
   public:
-    static AbstractResponseSchema createSchema(const std::vector<std::string> &tokens);
+    static AbstractResponseSchema createSchema(echoserverclient::AbstractTokens tokens);
 };
 } // namespace echoserver

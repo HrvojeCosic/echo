@@ -65,11 +65,11 @@ void Server::addListener(echoserverclient::AbstractSocket listener) {
     listenerPool.emplace_back(std::move(listener));
 }
 
-bool Server::executeCommand(std::string command, std::vector<std::string> &tokens) {
+bool Server::executeCommand(std::string command, echoserverclient::AbstractTokens tokens) {
     bool exists = inputToCommand.find(command) != inputToCommand.end();
 
     if (exists) {
-        inputToCommand[command]->execute(tokens);
+        inputToCommand[command]->execute(std::move(tokens));
     }
 
     return exists;
@@ -83,12 +83,12 @@ void Server::cliInputHandler(std::stop_token token) {
         if (userInput.length() == 0)
             continue;
 
-        std::vector<std::string> tokens;
-        echoserverclient::CliCommand<Server>::tokenizeCliInput(userInput, ' ', tokens);
-        if (inputToCommand.contains(tokens[0])) {
-            inputToCommand[tokens[0]]->execute(tokens);
+        auto tokens = std::make_unique<echoserverclient::RuntimeTokens>(userInput, ' ');
+        auto optionToken = tokens->getOption();
+        if (inputToCommand.contains(optionToken)) {
+            inputToCommand[optionToken]->execute(std::move(tokens));
         } else {
-            inputToCommand["--help"]->execute(tokens);
+            inputToCommand["--help"]->execute(std::move(tokens));
         }
     }
 }

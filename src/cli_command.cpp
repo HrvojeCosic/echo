@@ -12,30 +12,8 @@
 
 namespace echoserverclient {
 
-CLI_COMMAND_TYPE void CliCommand<APP_T>::tokenizeCliInput(std::string input, char delimiter,
-                                                          std::vector<std::string> &tokens) {
-    std::istringstream iss(input);
-    std::string token;
-
-    while (std::getline(iss, token, delimiter)) {
-        tokens.emplace_back(token);
-    }
-}
-
-CLI_COMMAND_TYPE std::string CliCommand<APP_T>::detokenizeCliInput(char delimiter,
-                                                                   const std::vector<std::string> &tokens) {
-    std::string result;
-    for (size_t i = 0; i < tokens.size(); i++) {
-        result += tokens[i];
-        if (i < tokens.size() - 1) {
-            result += delimiter;
-        }
-    }
-    return result;
-}
-
 // TODO: maybe support futher help parameters (e.g --help change-response-schema)?
-CLI_COMMAND_TYPE void HelpCliCommand<APP_T>::execute([[maybe_unused]] const std::vector<std::string> &tokens) const {
+CLI_COMMAND_TYPE void HelpCliCommand<APP_T>::execute([[maybe_unused]] AbstractTokens tokens) const {
     if constexpr (std::same_as<APP_T, echoserver::Server>) {
         std::cout << "Usage: " << std::endl;
         std::cout << "On startup: "
@@ -51,8 +29,8 @@ CLI_COMMAND_TYPE void HelpCliCommand<APP_T>::execute([[maybe_unused]] const std:
     }
 }
 
-void ChangeResponseSchemaCliCommand::execute(const std::vector<std::string> &tokens) const {
-    auto responseSchema = echoserver::ResponseSchemaFactory::createSchema(tokens);
+void ChangeResponseSchemaCliCommand::execute(AbstractTokens tokens) const {
+    auto responseSchema = echoserver::ResponseSchemaFactory::createSchema(std::move(tokens));
     if (responseSchema != nullptr) {
         app.setResponseSchema(std::move(responseSchema));
         std::cout << "Response schema has been set" << std::endl;
@@ -61,10 +39,10 @@ void ChangeResponseSchemaCliCommand::execute(const std::vector<std::string> &tok
     }
 }
 
-void SendToServerCliCommand::execute(const std::vector<std::string> &tokens) const {
+void SendToServerCliCommand::execute(AbstractTokens tokens) const {
     char buffer[app.getBufferSize()];
     int clientFd = app.getClientSocket()->getsocketFd();
-    std::string userInput = detokenizeCliInput(' ', tokens);
+    std::string userInput = tokens->detokenize(' ');
 
     send(clientFd, userInput.c_str(), userInput.length(), 0);
     int bytesRead = recv(clientFd, buffer, sizeof(buffer), 0);
