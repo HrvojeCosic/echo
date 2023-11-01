@@ -40,6 +40,11 @@ Server::Server() : responseSchema(std::make_unique<EquivalentResponseSchema>()) 
 Server::~Server() {
     for (echoserverclient::AbstractSocket &listenerSock : listenerPool) {
         listenerSock->destroy();
+
+        auto *unixListener = dynamic_cast<echoserverclient::UnixSocket *>(listenerSock.get());
+        if (unixListener) {
+            unlink(unixListener->getSocketPath().c_str());
+        }
     }
 
     for (int clientSock : clientPool) {

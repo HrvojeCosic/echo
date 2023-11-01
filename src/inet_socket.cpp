@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <cstring>
 #include <fcntl.h>
 #include <iostream>
 #include <netinet/in.h>
@@ -71,13 +72,6 @@ void InetSocket::initOptions(int socket) {
     }
 }
 
-void InetSocket::destroy() {
-    if (socketFd != INVALID_SOCKET_FD) {
-        close(socketFd);
-        socketFd = INVALID_SOCKET_FD;
-    }
-}
-
 void InetSocket::connectToServer(const std::string &serverAddress) {
     socketFd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -88,7 +82,7 @@ void InetSocket::connectToServer(const std::string &serverAddress) {
     inet_pton(AF_INET, serverAddress.c_str(), &serverSockAddr.sin_addr);
 
     if (connect(socketFd, (struct sockaddr *)&serverSockAddr, sizeof(serverSockAddr)) == -1) {
-        std::cerr << "Failed to connect to the Internet server." << std::endl;
+        std::cerr << "Failed to connect to the Internet server. " << std::strerror(errno) << std::endl;
         destroy();
         return;
     }

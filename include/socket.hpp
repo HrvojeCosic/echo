@@ -15,10 +15,11 @@ class ISocket {
     virtual int createAndBind() = 0;
     virtual void initOptions(int socketFd) = 0;
     virtual int setupNewConnection() = 0;
-    virtual void destroy() = 0;
     virtual void connectToServer(const std::string &serverAddress) = 0;
 
     inline virtual int getsocketFd() const { return socketFd; };
+
+    inline virtual void destroy() const { close(socketFd); };
 
   protected:
     int socketFd;
@@ -31,8 +32,9 @@ class UnixSocket : public ISocket {
     int createAndBind() override;
     void initOptions(int socketFd) override;
     int setupNewConnection() override;
-    void destroy() override;
     void connectToServer(const std::string &serverAddress) override;
+
+    inline std::string getSocketPath() { return socketPath; }
 
   private:
     const std::string socketPath;
@@ -45,7 +47,6 @@ class InetSocket : public ISocket {
     int createAndBind() override;
     void initOptions(int socketFd) override;
     int setupNewConnection() override;
-    void destroy() override;
     void connectToServer(const std::string &serverAddress) override;
 
   private:

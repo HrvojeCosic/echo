@@ -1,3 +1,4 @@
+#include <cstring>
 #include <fcntl.h>
 #include <iostream>
 #include <netinet/in.h>
@@ -56,25 +57,19 @@ void UnixSocket::initOptions(int socket) {
     }
 }
 
-void UnixSocket::destroy() {
-    if (socketFd != INVALID_SOCKET_FD) {
-        close(socketFd);
-        unlink(socketPath.c_str());
-        socketFd = INVALID_SOCKET_FD;
-    }
-}
-
 void UnixSocket::connectToServer(const std::string &serverAddress) {
     socketFd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (socketFd == INVALID_SOCKET_FD) {
+        throw std::runtime_error("Failed to create the Unix domain client socket");
+    }
 
     struct sockaddr_un serverSockAddr {};
 
     serverSockAddr.sun_family = AF_UNIX;
     strcpy(serverSockAddr.sun_path, serverAddress.c_str());
-    serverSockAddr.sun_path[0] = 0;
 
     if (connect(socketFd, (struct sockaddr *)&serverSockAddr, sizeof(serverSockAddr)) == -1) {
-        std::cerr << "Failed to connect to the Unix Domain server." << std::endl;
+        std::cerr << "Failed to connect to the Unix Domain server. " << std::strerror(errno) << std::endl;
         destroy();
         return;
     }

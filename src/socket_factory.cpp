@@ -43,8 +43,8 @@ echoserver::Server &SocketFactory::createServer(int argc, char *argv[]) {
 
     const std::string unixSocketPath = "/tmp/unix_socket";
     const int port = 6000;
-    server.addListener(std::make_unique<echoserverclient::UnixSocket>(unixSocketPath));
-    server.addListener(std::make_unique<echoserverclient::InetSocket>(port));
+    server.addListener(std::make_unique<UnixSocket>(unixSocketPath));
+    server.addListener(std::make_unique<InetSocket>(port));
 
     return server;
 }
