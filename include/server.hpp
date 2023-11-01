@@ -23,7 +23,7 @@ using InputToCommandType = std::unordered_map<std::string, AbstractCliCommand>;
 class Server {
   public:
     ~Server();
-    Server(Server &) = delete;
+    Server(const Server &) = delete;
     void operator=(const Server &) = delete;
     Server(Server &&) = delete;
     Server &operator=(Server &&) = delete;

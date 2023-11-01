@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <string>
 
@@ -10,7 +11,12 @@ namespace echoserverclient {
 class ISocket {
   public:
     ISocket() : socketFd(INVALID_SOCKET_FD){};
-    virtual ~ISocket(){};
+    ISocket(const ISocket &other) = delete;
+    ISocket &operator=(const ISocket &other) = delete;
+    ISocket(ISocket &&other) = delete;
+    ISocket &operator=(ISocket &&other) = delete;
+
+    virtual ~ISocket() { close(socketFd); }
 
     virtual int createAndBind() = 0;
     virtual void initOptions(int socketFd) = 0;
@@ -18,8 +24,6 @@ class ISocket {
     virtual void connectToServer(const std::string &serverAddress) = 0;
 
     inline virtual int getsocketFd() const { return socketFd; };
-
-    inline virtual void destroy() const { close(socketFd); };
 
   protected:
     int socketFd;

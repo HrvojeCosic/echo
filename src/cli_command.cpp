@@ -71,8 +71,8 @@ void SendToServerCliCommand::execute(const std::vector<std::string> &tokens) con
 
     if (bytesRead <= 0) {
         std::cerr << "Connection to the server terminated." << std::endl;
-        app.getClientSocket()->destroy();
         echoclient::Client::signalHandler(SIGTERM);
+        return;
     }
 
     std::string response(buffer, bytesRead);

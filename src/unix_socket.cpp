@@ -70,7 +70,6 @@ void UnixSocket::connectToServer(const std::string &serverAddress) {
 
     if (connect(socketFd, (struct sockaddr *)&serverSockAddr, sizeof(serverSockAddr)) == -1) {
         std::cerr << "Failed to connect to the Unix Domain server. " << std::strerror(errno) << std::endl;
-        destroy();
         return;
     }
 }

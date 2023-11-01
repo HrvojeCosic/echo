@@ -63,7 +63,6 @@ void Client::start() {
     std::unique_lock<std::mutex> lock(clientShutdownMutex);
     clientShutdownCV.wait(lock, [] { return clientShutdownFlag.test(); });
 
-    clientSocket->destroy();
     userInput.request_stop();
     std::cout << "\nClient closed." << std::endl;
 }
