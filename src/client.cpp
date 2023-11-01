@@ -24,7 +24,8 @@ void Client::signalHandler(int signum) {
     }
 }
 
-bool Client::executeCommand(std::string command, echoserverclient::AbstractTokens tokens) {
+bool Client::executeCommand(echoserverclient::AbstractTokens tokens) {
+    auto command = tokens->getOption();
     bool exists = inputToCommand.find(command) != inputToCommand.end();
 
     if (exists) {

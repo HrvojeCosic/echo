@@ -21,7 +21,7 @@ class Client {
 
     void start();
     void cliInputHandler(std::stop_token token);
-    bool executeCommand(std::string command, echoserverclient::AbstractTokens tokens);
+    bool executeCommand(echoserverclient::AbstractTokens tokens);
 
     inline echoserverclient::AbstractSocket &getClientSocket() { return clientSocket; };
 

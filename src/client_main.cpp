@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
 
     if (clientSocket == nullptr) {
         echoclient::Client client(nullptr);
-        client.executeCommand("--help", std::make_unique<echoserverclient::StartupTokens>(allArgs));
+        client.executeCommand(std::make_unique<echoserverclient::StartupTokens>("./echo_client --help", ' '));
         return 1;
     }
 

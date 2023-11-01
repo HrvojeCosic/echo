@@ -34,8 +34,8 @@ echoserver::Server &SocketFactory::createServer(int argc, char *argv[]) {
     auto tokens = std::make_unique<StartupTokens>(allArgs);
     auto optionTok = tokens->getOption();
     if (!optionTok.empty()) {
-        if (server.executeCommand(optionTok, std::move(tokens)) == false) {
-            server.executeCommand("--help", std::move(tokens));
+        if (server.executeCommand(std::move(tokens)) == false) {
+            server.executeCommand(std::make_unique<StartupTokens>("./echo_server --help", ' '));
         }
     }
 

@@ -65,7 +65,8 @@ void Server::addListener(echoserverclient::AbstractSocket listener) {
     listenerPool.emplace_back(std::move(listener));
 }
 
-bool Server::executeCommand(std::string command, echoserverclient::AbstractTokens tokens) {
+bool Server::executeCommand(echoserverclient::AbstractTokens tokens) {
+    auto command = tokens->getOption();
     bool exists = inputToCommand.find(command) != inputToCommand.end();
 
     if (exists) {

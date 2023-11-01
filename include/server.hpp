@@ -33,7 +33,7 @@ class Server {
 
     void start();
     void addListener(echoserverclient::AbstractSocket listener);
-    bool executeCommand(std::string command, echoserverclient::AbstractTokens tokens);
+    bool executeCommand(echoserverclient::AbstractTokens tokens);
 
     inline void setResponseSchema(AbstractResponseSchema schema) { responseSchema = std::move(schema); };
 
