@@ -2,10 +2,7 @@
 #include <fcntl.h>
 #include <iostream>
 #include <netinet/in.h>
-#include <stdexcept>
-#include <sys/socket.h>
 #include <sys/un.h>
-#include <unistd.h>
 
 #include "../include/socket.hpp"
 

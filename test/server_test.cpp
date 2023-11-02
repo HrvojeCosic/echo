@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <thread>
 
 #include "../include/server.hpp"
 #include "../include/socket_factory.hpp"

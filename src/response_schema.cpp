@@ -1,7 +1,6 @@
 #include "algorithm"
 
 #include "../include/response_schema.hpp"
-#include <iostream>
 
 namespace echoserver {
 

@@ -1,14 +1,9 @@
 #include <csignal>
 #include <iostream>
-#include <iterator>
-#include <sstream>
-#include <stdexcept>
 #include <sys/socket.h>
 
-#include "../include/cli_command.hpp"
 #include "../include/client.hpp"
 #include "../include/response_schema_factory.hpp"
-#include "../include/server.hpp"
 
 namespace echoserverclient {
 

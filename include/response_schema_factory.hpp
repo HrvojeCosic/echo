@@ -2,7 +2,6 @@
 
 #include <memory>
 
-#include "./response_schema.hpp"
 #include "./server.hpp"
 
 namespace echoserver {

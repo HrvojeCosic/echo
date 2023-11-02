@@ -1,6 +1,3 @@
-#include <iostream>
-#include <memory>
-
 #include "../include/client.hpp"
 #include "../include/socket_factory.hpp"
 

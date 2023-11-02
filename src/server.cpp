@@ -1,21 +1,8 @@
-#include <arpa/inet.h>
-#include <cassert>
-#include <cmath>
 #include <csignal>
-#include <fcntl.h>
 #include <iostream>
-#include <memory>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <ostream>
-#include <stdexcept>
-#include <sys/poll.h>
 #include <sys/socket.h>
-#include <sys/un.h>
 #include <thread>
-#include <unistd.h>
 
-#include "../include/response_schema_factory.hpp"
 #include "../include/server.hpp"
 
 namespace echoserver {

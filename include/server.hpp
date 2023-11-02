@@ -1,12 +1,8 @@
 #pragma once
 
-#include <cstdint>
-#include <memory>
 #include <poll.h>
 #include <stop_token>
-#include <string>
 #include <unordered_map>
-#include <vector>
 
 #include "./cli_command.hpp"
 #include "./response_schema.hpp"

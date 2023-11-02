@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stop_token>
-#include <string>
 #include <unordered_map>
 
 #include "./cli_command.hpp"

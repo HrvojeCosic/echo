@@ -1,7 +1,6 @@
 #include <condition_variable>
 #include <csignal>
 #include <iostream>
-#include <stop_token>
 #include <thread>
 
 #include "../include/client.hpp"

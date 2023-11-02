@@ -1,8 +1,3 @@
-#include <iostream>
-#include <memory>
-#include <unordered_map>
-
-#include "../include/server.hpp"
 #include "../include/socket_factory.hpp"
 
 int main(int argc, char *argv[]) {
