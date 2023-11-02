@@ -48,11 +48,14 @@ TESTBINS=    $(patsubst $(TEST_DIR)/%.cpp, $(TEST_DIR)/bin/%, $(TESTS))
 TESTFLAGS=  -fsanitize=address -static-libasan
 GTEST_LIBS= -lgtest -lgtest_main -lpthread
 
+EXCLUDED_FILES := src/client_main.cpp src/server_main.cpp
+FILTERED_MAIN_CPPFILES := $(filter-out $(EXCLUDED_FILES), $(CPPFILES))
+
 test: $(TEST_DIR)/bin $(TESTBINS) format
 	@for test in $(TESTBINS) ; do ./$$test ; done
 
-$(TEST_DIR)/bin/%: $(TEST_DIR)/%.cpp $(CPPFILES) $(HPPFILES)
-	$(CXX) $(CPP_VER) $(CFLAGS) -o $@ $< $(filter-out src/main.cpp,$(CPPFILES)) $(GTEST_LIBS) $(TESTFLAGS)
+$(TEST_DIR)/bin/%: $(TEST_DIR)/%.cpp $(FILTERED_MAIN_CPPFILES) $(HPPFILES)
+	$(CXX) $(CPP_VER) $(CFLAGS) -o $@ $< $(FILTERED_MAIN_CPPFILES) $(GTEST_LIBS) $(TESTFLAGS)
 
 $(TEST_DIR)/bin:
 	mkdir -p $@
