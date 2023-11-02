@@ -31,8 +31,15 @@ class Server {
     static Server &getInstance();
     static void signalHandler(int signum);
 
+    /* Sets up the socket listeners and starts the polling process with appropriate stopping handlers  */
     void start();
+
+    /* Sets up the "listener" and adds it to the tracked socket state */
     void addListener(echoserverclient::AbstractSocket listener);
+
+    /* Executes the command found in "tokens" if command has been setup inside "inputToCommand".
+     * Returns true if command has been found, false otherwise
+     */
     bool executeCommand(echoserverclient::AbstractTokens tokens);
 
     inline void setResponseSchema(AbstractResponseSchema schema) { responseSchema = std::move(schema); };
@@ -48,7 +55,11 @@ class Server {
 
     //-----------------------------------------------------------------------------------------------------------------------------
     void handleClientData(int clientIdx);
+
+    /* Closes the socket of a client of id "clientIdx" and removes it from tracked client socket state  */
     void closeClientConnection(int clientIdx);
+
+    /* Listens for user input in a REPL, triggering requested commands until requested to stop */
     void cliInputHandler(std::stop_token token);
 
     /* Converts the index from pollFds to a corresponding client pool iterator. */

@@ -25,6 +25,7 @@ CLI_COMMAND_TYPE class CliCommand {
     CliCommand(APP_T &app) : app(app){};
     virtual ~CliCommand(){};
 
+    /* Executes the CLI command using tokenized parameters found in "tokens"  */
     virtual void execute(AbstractTokens tokens) const = 0;
 
   protected:

@@ -18,9 +18,16 @@ class ISocket {
 
     virtual ~ISocket() { close(socketFd); }
 
+    /*Creates and binds a socket for the server to listen on  */
     virtual int createAndBind() = 0;
+
+    /*Sets up the initial socket options*/
     virtual void initOptions(int socketFd) = 0;
+
+    /*Accepts the incoming connection to the server and returns the incoming socket fd. */
     virtual int setupNewConnection() = 0;
+
+    /* Connects to the server of "serverAddress" */
     virtual void connectToServer(const std::string &serverAddress) = 0;
 
     inline virtual int getsocketFd() const { return socketFd; };

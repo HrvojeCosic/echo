@@ -8,6 +8,7 @@ class IResponseSchema {
   public:
     virtual ~IResponseSchema(){};
 
+    /* Modifies "message" based on the rules of the concrete schema */
     virtual void generateResponse(std::string &message) = 0;
 };
 

@@ -19,8 +19,15 @@ class Client {
 
     static void signalHandler(int signum);
 
+    /* Enables the necessary handlers and stopping points for the client REPL */
     void start();
+
+    /* Runs the client REPL and handles user input */
     void cliInputHandler(std::stop_token token);
+
+    /* Executes the command found in "tokens" if command has been setup inside "inputToCommand".
+     * Returns true if command has been found, false otherwise
+     */
     bool executeCommand(echoserverclient::AbstractTokens tokens);
 
     inline echoserverclient::AbstractSocket &getClientSocket() { return clientSocket; };
@@ -28,7 +35,7 @@ class Client {
     inline int getBufferSize() { return bufferSize; }
 
   private:
-    int bufferSize = 1024;
+    const int bufferSize = 1024;
 
     echoserverclient::AbstractSocket clientSocket;
 

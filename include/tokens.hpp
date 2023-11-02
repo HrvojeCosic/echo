@@ -10,15 +10,23 @@ class Tokens {
     Tokens(const std::vector<std::string> &tokens) : tokens(tokens){};
     Tokens(std::string input, char delimiter);
 
+    /* Returns the token denoting the command's option (e.g --set-response-schema) if found in "tokens", otherwise
+     * returns an empty string  */
     virtual std::string getOption() const = 0;
 
+    /* Returns the token denoting the command's choice for the option (e.g CENSORED) if found in "tokens", otherwise
+     * returns an empty string  */
     virtual std::string getChoice() const = 0;
 
+    /* Returns the token denoting the command's argument for the option's choice (e.g CHAR=s) if found in "tokens",
+     * otherwise returns an empty string  */
     virtual std::string getChoiceArgument() const = 0;
 
+    /* Returns "tokens" concatenated into a string, separated by the "delimiter" */
     std::string detokenize(char delimiter);
 
   protected:
+    /* Returns the token at "index" if such index exists, or an empty string otherwise */
     inline std::string getTokenAtIndex(size_t index) const { return tokens.size() <= index ? "" : tokens[index]; };
 
     std::vector<std::string> tokens;
