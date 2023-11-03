@@ -8,22 +8,22 @@
 
 namespace echoserverclient {
 
-int UnixSocket::createAndBind() {
+UnixSocket::UnixSocket(const std::string path) : socketPath(path) {
     socketFd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (socketFd == INVALID_SOCKET_FD) {
-        throw std::runtime_error("Failed to create the Unix domain listening socket");
+        throw std::runtime_error("Failed to create the Unix domain socket");
     }
+}
 
+void UnixSocket::bind() {
     struct sockaddr_un serverAddr {};
 
     serverAddr.sun_family = AF_UNIX;
     strncpy(serverAddr.sun_path, socketPath.c_str(), sizeof(serverAddr.sun_path));
 
-    if (bind(socketFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
-        throw std::runtime_error("Failed to bind the Unix domain listening socket");
+    if (::bind(socketFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
+        throw std::runtime_error("Failed to bind the Unix domain socket");
     }
-
-    return socketFd;
 }
 
 int UnixSocket::setupNewConnection() {
@@ -50,16 +50,11 @@ int UnixSocket::setupNewConnection() {
 
 void UnixSocket::initOptions(int socket) {
     if (fcntl(socket, F_SETFL, O_NONBLOCK) == -1) {
-        throw std::runtime_error("Failed to set the listening unix socket to non-blocking mode");
+        throw std::runtime_error("Failed to set the unix socket to non-blocking mode");
     }
 }
 
 void UnixSocket::connectToServer(const std::string &serverAddress) {
-    socketFd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (socketFd == INVALID_SOCKET_FD) {
-        throw std::runtime_error("Failed to create the Unix domain client socket");
-    }
-
     struct sockaddr_un serverSockAddr {};
 
     serverSockAddr.sun_family = AF_UNIX;

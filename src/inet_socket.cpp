@@ -1,14 +1,16 @@
 #include <arpa/inet.h>
 #include <cstring>
 #include <fcntl.h>
+#include <functional>
 #include <iostream>
 #include <netinet/tcp.h>
+#include <stdexcept>
 
 #include "../include/socket.hpp"
 
 namespace echoserverclient {
 
-int InetSocket::createAndBind() {
+InetSocket::InetSocket(int port) : port(port) {
     socketFd = socket(AF_INET, SOCK_STREAM, 0);
     if (socketFd == INVALID_SOCKET_FD) {
         throw std::runtime_error("Failed to create the listening socket");
@@ -18,18 +20,18 @@ int InetSocket::createAndBind() {
     if (setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) == -1) {
         throw std::runtime_error("Failed to set socket options");
     }
+}
 
+void InetSocket::bind() {
     struct sockaddr_in serverAddr {};
 
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     serverAddr.sin_port = htons(port);
 
-    if (bind(socketFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
+    if (::bind(socketFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
         throw std::runtime_error("Failed to bind the internet domain listening socket");
     }
-
-    return socketFd;
 }
 
 int InetSocket::setupNewConnection() {
@@ -69,8 +71,6 @@ void InetSocket::initOptions(int socket) {
 }
 
 void InetSocket::connectToServer(const std::string &serverAddress) {
-    socketFd = socket(AF_INET, SOCK_STREAM, 0);
-
     struct sockaddr_in serverSockAddr {};
 
     serverSockAddr.sin_family = AF_INET;
@@ -78,8 +78,7 @@ void InetSocket::connectToServer(const std::string &serverAddress) {
     inet_pton(AF_INET, serverAddress.c_str(), &serverSockAddr.sin_addr);
 
     if (connect(socketFd, (struct sockaddr *)&serverSockAddr, sizeof(serverSockAddr)) == -1) {
-        std::cerr << "Failed to connect to the Internet server. " << std::strerror(errno) << std::endl;
-        return;
+        throw std::runtime_error("Failed to connect to the Internet server");
     }
 }
 } // namespace echoserverclient

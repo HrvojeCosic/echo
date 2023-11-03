@@ -45,11 +45,14 @@ Server &Server::getInstance() {
 }
 
 void Server::addListener(echoserverclient::AbstractSocket listener) {
-    int listenSocket = listener->createAndBind();
-    listener->initOptions(listenSocket);
-
-    pollFds.emplace(getNextListenerPollFdsIterator(), pollfd{listenSocket, POLLIN, 0});
-    listenerPool.emplace_back(std::move(listener));
+    try {
+        listener->bind();
+        listener->initOptions(listener->getsocketFd());
+        pollFds.emplace(getNextListenerPollFdsIterator(), pollfd{listener->getsocketFd(), POLLIN, 0});
+        listenerPool.emplace_back(std::move(listener));
+    } catch (std::runtime_error &e) {
+        std::cout << e.what() << std::endl;
+    }
 }
 
 bool Server::executeCommand(echoserverclient::AbstractTokens tokens) {

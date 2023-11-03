@@ -16,8 +16,8 @@ class ISocket {
 
     virtual ~ISocket() { close(socketFd); }
 
-    /*Creates and binds a socket for the server to listen on  */
-    virtual int createAndBind() = 0;
+    /* Binds a socket for the server to listen on  */
+    virtual void bind() = 0;
 
     /*Sets up the initial socket options*/
     virtual void initOptions(int socketFd) = 0;
@@ -36,9 +36,9 @@ class ISocket {
 
 class UnixSocket : public ISocket {
   public:
-    UnixSocket(const std::string path) : socketPath(path){};
+    UnixSocket(const std::string path);
 
-    int createAndBind() override;
+    void bind() override;
     void initOptions(int socketFd) override;
     int setupNewConnection() override;
     void connectToServer(const std::string &serverAddress) override;
@@ -51,9 +51,9 @@ class UnixSocket : public ISocket {
 
 class InetSocket : public ISocket {
   public:
-    InetSocket(int port) : port(port){};
+    InetSocket(int port);
 
-    int createAndBind() override;
+    void bind() override;
     void initOptions(int socketFd) override;
     int setupNewConnection() override;
     void connectToServer(const std::string &serverAddress) override;
