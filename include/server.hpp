@@ -52,6 +52,18 @@ class Server {
     //-----------------------------------------------------------------------------------------------------------------------------
     void handleClientData(int clientIdx);
 
+    /* Prepares listener sockets inside the server's listener pool to accept connections */
+    void prepareListeners();
+
+    /* Goes over all listeners and accepts any incoming connection requests */
+    void acceptIncomingConnections();
+
+    /* Goes over all listeners and  */
+    void handleIncomingData();
+
+    /* Polls all file descriptors from pollFds and handles relevant events */
+    void pollFileDescriptors();
+
     /* Closes the socket of a client of id "clientIdx" and removes it from tracked client socket state  */
     void closeClientConnection(int clientIdx);
 
