@@ -1,7 +1,13 @@
 #include "../include/socket_factory.hpp"
+#include <iostream>
 
 int main(int argc, char *argv[]) {
-    auto &server = echoserverclient::SocketFactory::createServer(argc, argv);
-    server.start();
+    try {
+        auto server = echoserverclient::SocketFactory::createServer(argc, argv);
+        server->start();
+    } catch (const std::runtime_error &e) {
+        std::cerr << e.what() << std::endl;
+    }
+
     return 0;
 }
