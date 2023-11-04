@@ -54,7 +54,7 @@ void Server::addListener(echoserverclient::AbstractSocket listener) {
         listener->initOptions(listener->getsocketFd());
         pollFds.emplace(getNextListenerPollFdsIterator(), pollfd{listener->getsocketFd(), POLLIN, 0});
         listenerPool.emplace_back(std::move(listener));
-    } catch (std::runtime_error &e) {
+    } catch (const std::runtime_error &e) {
         std::cerr << e.what() << std::endl;
     }
 }
@@ -76,7 +76,10 @@ void Server::start() {
     try {
         prepareListeners();
         while (!serverShutdownRequested) {
-            pollFileDescriptors();
+            if (pollFileDescriptors() != -1) {
+                acceptIncomingConnections();
+                handleIncomingData();
+            }
         }
     } catch (const std::runtime_error &e) {
         std::cerr << e.what() << std::endl;
@@ -104,15 +107,12 @@ void Server::cliInputHandler(std::stop_token token) {
     }
 }
 
-void Server::pollFileDescriptors() {
-    if (poll(pollFds.data(), pollFds.size(), -1) == -1) {
-        if (errno != EINTR) {
-            throw std::system_error(errno, std::generic_category(), "Poll error");
-        }
-    } else {
-        acceptIncomingConnections();
-        handleIncomingData();
+int Server::pollFileDescriptors() {
+    int numReady = poll(pollFds.data(), pollFds.size(), -1);
+    if (numReady == -1 && errno != EINTR) {
+        throw std::system_error(errno, std::generic_category(), "Poll error");
     }
+    return numReady;
 }
 
 void Server::prepareListeners() {
@@ -142,18 +142,12 @@ void Server::handleIncomingData() {
 
         int clientSocket = pollFds[pollFdIdx].fd;
         char buffer[bufferSize];
-        int bytesRead = recv(clientSocket, buffer, bufferSize, 0);
+        int bytesRead = receiveFromClient(pollFdIdx, buffer);
 
-        if (bytesRead == -1) {
-            if (errno != EWOULDBLOCK) {
-                std::cerr << "Error reading from client " << pollFdIdx << std::endl;
-                closeClientConnection(pollFdIdx);
-            }
-        } else if (bytesRead == 0) {
+        if (bytesRead == 0) {
             closeClientConnection(pollFdIdx);
             std::cout << "Connection closed by a client " << std::endl;
         } else {
-            // all is good, send back the response
             std::string data(buffer, bytesRead);
             responseSchema->generateResponse(data);
             std::string response = data + "\n";
@@ -162,9 +156,20 @@ void Server::handleIncomingData() {
     }
 }
 
+int Server::receiveFromClient(int pollFdIdx, char *buffer) {
+    int bytesRead = recv(pollFds[pollFdIdx].fd, buffer, bufferSize, 0);
+    if (bytesRead == -1) {
+        throw std::system_error(errno, std::generic_category(), "Error reading from client");
+    }
+    return bytesRead;
+}
+
 void Server::closeClientConnection(int pollFdIdx) {
     int clientSocket = pollFds[pollFdIdx].fd;
-    close(clientSocket);
+
+    if (close(clientSocket) == -1) {
+        throw std::system_error(errno, std::generic_category(), "Error closing client connection");
+    }
 
     pollFds.erase(pollFds.begin() + pollFdIdx);
     clientPool.erase(pollFdIdxToClientPoolIterator(pollFdIdx));

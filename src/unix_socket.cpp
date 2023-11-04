@@ -11,7 +11,7 @@ namespace echoserverclient {
 UnixSocket::UnixSocket(const std::string path) : socketPath(path) {
     socketFd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (socketFd == INVALID_SOCKET_FD) {
-        throw std::runtime_error("Failed to create the Unix domain socket");
+        throw std::system_error(errno, std::generic_category(), "Failed to create the Unix domain socket");
     }
 }
 
@@ -22,7 +22,7 @@ void UnixSocket::bind() {
     strncpy(serverAddr.sun_path, socketPath.c_str(), sizeof(serverAddr.sun_path));
 
     if (::bind(socketFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
-        throw std::runtime_error("Failed to bind the Unix domain socket");
+        throw std::system_error(errno, std::generic_category(), "Failed to bind the Unix domain socket");
     }
 }
 
@@ -37,7 +37,8 @@ int UnixSocket::setupNewConnection() {
             if (errno == EWOULDBLOCK || errno == EAGAIN) {
                 return clientSocket; // No more incoming connections
             } else {
-                throw std::runtime_error("Failed to accept a new unix socket connection");
+                throw std::system_error(errno, std::generic_category(),
+                                        "Failed to accept a new unix socket connection");
             }
         }
 
@@ -50,7 +51,7 @@ int UnixSocket::setupNewConnection() {
 
 void UnixSocket::initOptions(int socket) {
     if (fcntl(socket, F_SETFL, O_NONBLOCK) == -1) {
-        throw std::runtime_error("Failed to set the unix socket to non-blocking mode");
+        throw std::system_error(errno, std::generic_category(), "Failed to set the unix socket to non-blocking mode");
     }
 }
 
@@ -61,8 +62,7 @@ void UnixSocket::connectToServer(const std::string &serverAddress) {
     strcpy(serverSockAddr.sun_path, serverAddress.c_str());
 
     if (connect(socketFd, (struct sockaddr *)&serverSockAddr, sizeof(serverSockAddr)) == -1) {
-        std::cerr << "Failed to connect to the Unix Domain server. " << std::strerror(errno) << std::endl;
-        return;
+        throw std::system_error(errno, std::generic_category(), "Failed to connect to the Unix Domain server");
     }
 }
 } // namespace echoserverclient

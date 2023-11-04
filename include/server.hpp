@@ -61,8 +61,13 @@ class Server {
     /* Goes over all listeners and  */
     void handleIncomingData();
 
-    /* Polls all file descriptors from pollFds and handles relevant events */
-    void pollFileDescriptors();
+    /* Polls all file descriptors from pollFds, returning the number of file descriptors with events or throwing an
+     * error if necessary */
+    virtual int pollFileDescriptors();
+
+    /* Receives data from socket of pollFdIdx and returns number of bytes read or throws an error if necessary, closing
+     * the connection to that socket */
+    virtual int receiveFromClient(int pollFdIdx, char *buffer);
 
     /* Closes the socket of a client of id "clientIdx" and removes it from tracked client socket state  */
     void closeClientConnection(int clientIdx);

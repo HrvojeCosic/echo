@@ -43,7 +43,7 @@ void SendToServerCliCommand::execute(AbstractTokens tokens) const {
     int bytesRead = recv(clientFd, buffer, sizeof(buffer), 0);
 
     if (bytesRead <= 0) {
-        std::cerr << "Connection to the server terminated." << std::endl;
+        std::cout << "Connection to the server terminated." << std::endl;
         echoclient::Client::signalHandler(SIGTERM);
         return;
     }

@@ -13,12 +13,12 @@ namespace echoserverclient {
 InetSocket::InetSocket(int port) : port(port) {
     socketFd = socket(AF_INET, SOCK_STREAM, 0);
     if (socketFd == INVALID_SOCKET_FD) {
-        throw std::runtime_error("Failed to create the listening socket");
+        throw std::system_error(errno, std::generic_category(), "Failed to create the internet socket");
     }
 
     int enable = 1;
     if (setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) == -1) {
-        throw std::runtime_error("Failed to set socket options");
+        throw std::system_error(errno, std::generic_category(), "Failed to set internet socket options");
     }
 }
 
@@ -30,7 +30,7 @@ void InetSocket::bind() {
     serverAddr.sin_port = htons(port);
 
     if (::bind(socketFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
-        throw std::runtime_error("Failed to bind the internet domain listening socket");
+        throw std::system_error(errno, std::generic_category(), "Failed to bind the internet domain socket");
     }
 }
 
@@ -45,7 +45,8 @@ int InetSocket::setupNewConnection() {
             if (errno == EWOULDBLOCK || errno == EAGAIN) {
                 return clientSocket; // No more incoming connections
             } else {
-                throw std::runtime_error("Failed to accept a new internet socket connection");
+                throw std::system_error(errno, std::generic_category(),
+                                        "Failed to accept a new internet socket connection");
             }
         }
 
@@ -61,12 +62,13 @@ int InetSocket::setupNewConnection() {
 
 void InetSocket::initOptions(int socket) {
     if (fcntl(socketFd, F_SETFL, O_NONBLOCK) == -1) {
-        throw std::runtime_error("Failed to set the listening internet socket to non-blocking mode");
+        throw std::system_error(errno, std::generic_category(),
+                                "Failed to set the internet socket to non-blocking mode");
     }
 
     int flag = 1;
     if (setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(int)) == -1) {
-        throw std::runtime_error("Failed to disable the Nagle algorithm");
+        throw std::system_error(errno, std::generic_category(), "Failed to disable the Nagle algorithm");
     }
 }
 
@@ -78,7 +80,7 @@ void InetSocket::connectToServer(const std::string &serverAddress) {
     inet_pton(AF_INET, serverAddress.c_str(), &serverSockAddr.sin_addr);
 
     if (connect(socketFd, (struct sockaddr *)&serverSockAddr, sizeof(serverSockAddr)) == -1) {
-        throw std::runtime_error("Failed to connect to the Internet server");
+        throw std::system_error(errno, std::generic_category(), "Failed to connect to the Internet server");
     }
 }
 } // namespace echoserverclient
