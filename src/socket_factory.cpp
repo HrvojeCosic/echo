@@ -6,23 +6,25 @@
 namespace echoserverclient {
 
 AbstractSocket SocketFactory::createClientSocket(int argc, char *argv[]) {
-    if (argc == 1 || strcmp(argv[1], "--help") == 0) {
+    std::vector<std::string> allArgs(argv, argv + argc);
+    auto tokens = std::make_unique<StartupTokens>(allArgs);
+    const std::string option = tokens->getOption();
+    const std::string choice = tokens->getChoice();
+
+    if (option.empty() || option == "--help") {
         return nullptr;
     }
 
-    const std::string serverAddress = argv[1];
     AbstractSocket socket;
 
-    if (argc == 2) {
-        socket = std::make_unique<UnixSocket>(serverAddress);
-    } else if (argc == 3) {
-        int serverPort = std::atoi(argv[2]);
-        socket = std::make_unique<InetSocket>(serverPort);
+    if (choice.empty()) {
+        socket = std::make_unique<UnixSocket>(option);
     } else {
-        return nullptr;
+        int serverPort = std::atoi(choice.c_str());
+        socket = std::make_unique<InetSocket>(serverPort);
     }
 
-    socket->connectToServer(serverAddress);
+    socket->connectToServer(option);
     return socket;
 }
 
