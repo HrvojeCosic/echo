@@ -27,26 +27,18 @@ void UnixSocket::bind() {
 }
 
 int UnixSocket::setupNewConnection() {
-    while (true) {
-        struct sockaddr_in clientAddr {};
+    struct sockaddr_in clientAddr {};
 
-        socklen_t clientAddrLen = sizeof(clientAddr);
+    socklen_t clientAddrLen = sizeof(clientAddr);
 
-        int clientSocket = accept(socketFd, (struct sockaddr *)&clientAddr, &clientAddrLen);
-        if (clientSocket == INVALID_SOCKET_FD) {
-            if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                return clientSocket; // No more incoming connections
-            } else {
-                throw std::system_error(errno, std::generic_category(),
-                                        "Failed to accept a new unix socket connection");
-            }
-        }
-
-        initOptions(clientSocket);
-        std::cout << "Accepted connection from " << socketPath << std::endl;
-
-        return clientSocket;
+    int clientSocket = accept(socketFd, (struct sockaddr *)&clientAddr, &clientAddrLen);
+    if (clientSocket == INVALID_SOCKET_FD) {
+        throw std::system_error(errno, std::generic_category(), "Failed to accept a new unix socket connection");
     }
+    initOptions(clientSocket);
+
+    std::cout << "Accepted connection from " << socketPath << std::endl;
+    return clientSocket;
 }
 
 void UnixSocket::initOptions(int socket) {

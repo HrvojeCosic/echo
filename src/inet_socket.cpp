@@ -35,29 +35,20 @@ void InetSocket::bind() {
 }
 
 int InetSocket::setupNewConnection() {
-    while (true) {
-        struct sockaddr_in clientAddr {};
+    struct sockaddr_in clientAddr {};
 
-        socklen_t clientAddrLen = sizeof(clientAddr);
+    socklen_t clientAddrLen = sizeof(clientAddr);
 
-        int clientSocket = accept(socketFd, (struct sockaddr *)&clientAddr, &clientAddrLen);
-        if (clientSocket == INVALID_SOCKET_FD) {
-            if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                return clientSocket; // No more incoming connections
-            } else {
-                throw std::system_error(errno, std::generic_category(),
-                                        "Failed to accept a new internet socket connection");
-            }
-        }
-
-        initOptions(clientSocket);
-
-        char newClientIp[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &(clientAddr.sin_addr), newClientIp, INET_ADDRSTRLEN);
-        std::cout << "Accepted connection from " << newClientIp << ":" << ntohs(clientAddr.sin_port) << std::endl;
-
-        return clientSocket;
+    int clientSocket = accept(socketFd, (struct sockaddr *)&clientAddr, &clientAddrLen);
+    if (clientSocket == INVALID_SOCKET_FD) {
+        throw std::system_error(errno, std::generic_category(), "Failed to accept a new internet socket connection");
     }
+    initOptions(clientSocket);
+
+    char newClientIp[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(clientAddr.sin_addr), newClientIp, INET_ADDRSTRLEN);
+    std::cout << "Accepted connection from " << newClientIp << ":" << ntohs(clientAddr.sin_port) << std::endl;
+    return clientSocket;
 }
 
 void InetSocket::initOptions(int socket) {
