@@ -31,11 +31,7 @@ class Client {
 
     inline echoserverclient::AbstractSocket &getClientSocket() { return clientSocket; };
 
-    inline int getBufferSize() { return bufferSize; }
-
   private:
-    const int bufferSize = 1024;
-
     echoserverclient::AbstractSocket clientSocket;
 
     /* inputToCommand maps user CLI inputs to their respective commands that hold command executors */

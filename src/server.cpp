@@ -8,7 +8,9 @@
 
 namespace echoserver {
 
+namespace {
 volatile std::sig_atomic_t serverShutdownRequested = false;
+}
 
 void Server::signalHandler(int signum) {
     if (signum == SIGINT || signum == SIGTERM) {
@@ -18,8 +20,7 @@ void Server::signalHandler(int signum) {
 
 Server::Server() : responseSchema(std::make_unique<EquivalentResponseSchema>()) {
     clientPool.reserve(maxClients);
-    listenerPool.reserve(maxListeners);
-    pollFds.reserve(maxClients + maxListeners);
+    pollFds.reserve(maxClients);
 
     inputToCommand["--set-response-schema"] = std::make_unique<ResponseSchemaCliCommand>(*this);
     inputToCommand["--help"] = std::make_unique<ServerHelpCliCommand>(*this);
@@ -136,7 +137,7 @@ void Server::handleIncomingData() {
         }
 
         int clientSocket = pollFds[pollFdIdx].fd;
-        char buffer[bufferSize];
+        char buffer[echoserverclient::bufferSize];
         int bytesRead = receiveFromClient(pollFdIdx, buffer);
 
         if (bytesRead == 0) {
@@ -152,7 +153,7 @@ void Server::handleIncomingData() {
 }
 
 int Server::receiveFromClient(int pollFdIdx, char *buffer) {
-    int bytesRead = recv(pollFds[pollFdIdx].fd, buffer, bufferSize, 0);
+    int bytesRead = recv(pollFds[pollFdIdx].fd, buffer, echoserverclient::bufferSize, 0);
     if (bytesRead == -1) {
         throw std::system_error(errno, std::generic_category(), "Error reading from client");
     }

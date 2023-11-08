@@ -16,13 +16,15 @@ using ResponseSchemaCliCommand = echoserverclient::ChangeResponseSchemaCliComman
 using ServerHelpCliCommand = echoserverclient::HelpCliCommand<Server>;
 using InputToCommandType = std::unordered_map<std::string, AbstractCliCommand>;
 
+const int maxClients = 50; // denotes max number of clients per listener
+
 class Server {
   public:
     Server();
     ~Server();
     Server(const Server &) = delete;
     void operator=(const Server &) = delete;
-    Server(Server &&) = delete;
+    Server(Server &&) = default;
     Server &operator=(Server &&) = delete;
 
     static void signalHandler(int signum);
@@ -84,10 +86,6 @@ class Server {
     }
 
     //-----------------------------------------------------------------------------------------------------------------------------
-    const int maxListeners = 5;
-    const int maxClients = 50; // denotes max number of clients per listener
-    const int bufferSize = 1024;
-
     /* Response schema dictates the way server is going to respond in */
     AbstractResponseSchema responseSchema;
 

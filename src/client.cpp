@@ -7,9 +7,11 @@
 
 namespace echoclient {
 
+namespace {
 std::atomic_flag clientShutdownFlag = ATOMIC_FLAG_INIT;
 std::condition_variable clientShutdownCV;
 std::mutex clientShutdownMutex;
+} // namespace
 
 Client::Client(echoserverclient::AbstractSocket socket) : clientSocket(std::move(socket)) {
     inputToCommand["--help"] = std::make_unique<ClientHelpCliCommand>(*this);

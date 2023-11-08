@@ -6,6 +6,8 @@
 
 namespace echoserverclient {
 
+const int bufferSize = 1024;
+
 class ISocket {
   public:
     ISocket() : socketFd(INVALID_SOCKET_FD){};

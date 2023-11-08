@@ -35,7 +35,7 @@ void ChangeResponseSchemaCliCommand::execute(AbstractTokens tokens) const {
 }
 
 void SendToServerCliCommand::execute(AbstractTokens tokens) const {
-    char buffer[app.getBufferSize()];
+    char buffer[echoserverclient::bufferSize];
     int clientFd = app.getClientSocket()->getsocketFd();
     std::string userInput = tokens->detokenize(' ');
 
