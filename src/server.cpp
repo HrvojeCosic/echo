@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <system_error>
-#include <thread>
+#include <unistd.h>
 
 #include "../include/server.hpp"
 
@@ -21,26 +21,11 @@ void Server::signalHandler(int signum) {
 Server::Server() : responseSchema(std::make_unique<EquivalentResponseSchema>()) {
     clientPool.reserve(maxClients);
     pollFds.reserve(maxClients);
-
-    inputToCommand["--set-response-schema"] = std::make_unique<ResponseSchemaCliCommand>(*this);
-    inputToCommand["--help"] = std::make_unique<ServerHelpCliCommand>(*this);
-
-    std::signal(SIGINT, Server::signalHandler);
-    std::signal(SIGTERM, Server::signalHandler);
 }
 
 Server::~Server() {
-    for (echoserverclient::AbstractSocket &listenerSock : listenerPool) {
-        auto *unixListener = dynamic_cast<echoserverclient::UnixSocket *>(listenerSock.get());
-        if (unixListener) {
-            unlink(unixListener->getSocketPath().c_str());
-        }
-    }
-
-    for (int clientSock : clientPool) {
-        if (clientSock != -1) {
-            close(clientSock);
-        }
+    for (auto pollFd : pollFds) {
+        close(pollFd.fd);
     }
 }
 
@@ -55,20 +40,9 @@ void Server::addListener(echoserverclient::AbstractSocket listener) {
     }
 }
 
-bool Server::executeCommand(echoserverclient::AbstractTokens tokens) {
-    auto command = tokens->getOption();
-    bool exists = inputToCommand.find(command) != inputToCommand.end();
-
-    if (exists) {
-        inputToCommand[command]->execute(std::move(tokens));
-    }
-
-    return exists;
-}
-
 void Server::start() {
-    std::jthread userInput([this](std::stop_token st) { this->cliInputHandler(st); });
-
+    std::signal(SIGINT, Server::signalHandler);
+    std::signal(SIGTERM, Server::signalHandler);
     try {
         prepareListeners();
         while (!serverShutdownRequested) {
@@ -79,27 +53,6 @@ void Server::start() {
         }
     } catch (const std::runtime_error &e) {
         std::cerr << e.what() << std::endl;
-    }
-
-    userInput.request_stop();
-    std::cout << std::endl << "Shutting down the server... press enter to continue" << std::endl;
-}
-
-void Server::cliInputHandler(std::stop_token token) {
-    while (!token.stop_requested()) {
-        std::string userInput;
-        std::getline(std::cin, userInput);
-
-        if (userInput.length() == 0)
-            continue;
-
-        auto tokens = std::make_unique<echoserverclient::RuntimeTokens>(userInput, ' ');
-        auto optionToken = tokens->getOption();
-        if (inputToCommand.contains(optionToken)) {
-            inputToCommand[optionToken]->execute(std::move(tokens));
-        } else {
-            inputToCommand["--help"]->execute(std::move(tokens));
-        }
     }
 }
 

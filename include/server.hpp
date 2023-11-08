@@ -10,14 +10,11 @@
 
 namespace echoserver {
 
-using AbstractCliCommand = std::unique_ptr<echoserverclient::CliCommand<Server>>;
-using AbstractResponseSchema = std::unique_ptr<IResponseSchema>;
-using ResponseSchemaCliCommand = echoserverclient::ChangeResponseSchemaCliCommand;
-using ServerHelpCliCommand = echoserverclient::HelpCliCommand<Server>;
-using InputToCommandType = std::unordered_map<std::string, AbstractCliCommand>;
-
 const int maxClients = 50; // denotes max number of clients per listener
 
+using AbstractResponseSchema = std::unique_ptr<IResponseSchema>;
+
+//-----------------------------------------------------------------------------------------------------------------------------
 class Server {
   public:
     Server();
@@ -34,11 +31,6 @@ class Server {
 
     /* Sets up the "listener" and adds it to the tracked socket state */
     void addListener(echoserverclient::AbstractSocket listener);
-
-    /* Executes the command found in "tokens" if command has been setup inside "inputToCommand".
-     * Returns true if command has been found, false otherwise
-     */
-    bool executeCommand(echoserverclient::AbstractTokens tokens);
 
     inline void setResponseSchema(AbstractResponseSchema schema) { responseSchema = std::move(schema); };
 
@@ -72,9 +64,6 @@ class Server {
     /* Closes the socket of a client of id "clientIdx" and removes it from tracked client socket state  */
     void closeClientConnection(int clientIdx);
 
-    /* Listens for user input in a REPL, triggering requested commands until requested to stop */
-    void cliInputHandler(std::stop_token token);
-
     /* Converts the index from pollFds to a corresponding client pool iterator. */
     inline std::vector<int>::iterator pollFdIdxToClientPoolIterator(int pollFdIdx) {
         return clientPool.begin() + pollFdIdx - listenerPool.size();
@@ -88,9 +77,6 @@ class Server {
     //-----------------------------------------------------------------------------------------------------------------------------
     /* Response schema dictates the way server is going to respond in */
     AbstractResponseSchema responseSchema;
-
-    /* inputToCommand maps user CLI inputs to their respective commands that hold command executors */
-    InputToCommandType inputToCommand;
 
     /*
      *clientPool contains only client socket file descriptors

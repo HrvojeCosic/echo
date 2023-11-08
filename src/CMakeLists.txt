@@ -1,5 +1,6 @@
 add_library(
     echoclientserver
+    dispatcher.cpp
     server.cpp
     client.cpp
     cli_command.cpp
@@ -13,8 +14,8 @@ add_library(
 )
 
 add_executable(
-    echo_server
-    server_main.cpp
+    dispatcher
+    dispatcher_main.cpp
 )
 
 add_executable(
@@ -23,4 +24,4 @@ add_executable(
 )
 
 target_link_libraries(echo_client PRIVATE echoclientserver)
-target_link_libraries(echo_server PRIVATE echoclientserver)
+target_link_libraries(dispatcher PRIVATE echoclientserver)

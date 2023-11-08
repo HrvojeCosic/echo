@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 
 #include "../include/client.hpp"
+#include "../include/dispatcher.hpp"
 #include "../include/response_schema_factory.hpp"
 
 namespace echoserverclient {
@@ -52,9 +53,9 @@ void SendToServerCliCommand::execute(AbstractTokens tokens) const {
     std::cout << "Server Response: " << response << std::endl;
 }
 
-template class CliCommand<echoserver::Server>;
+template class CliCommand<echoserver::Dispatcher>;
 template class CliCommand<echoclient::Client>;
-template class HelpCliCommand<echoserver::Server>;
+template class HelpCliCommand<echoserver::Dispatcher>;
 template class HelpCliCommand<echoclient::Client>;
 
 } // namespace echoserverclient

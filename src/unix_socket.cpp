@@ -3,6 +3,7 @@
 #include <iostream>
 #include <netinet/in.h>
 #include <sys/un.h>
+#include <unistd.h>
 
 #include "../include/socket.hpp"
 
@@ -21,6 +22,7 @@ void UnixSocket::bind() {
     serverAddr.sun_family = AF_UNIX;
     strncpy(serverAddr.sun_path, socketPath.c_str(), sizeof(serverAddr.sun_path));
 
+    unlink(socketPath.c_str());
     if (::bind(socketFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
         throw std::system_error(errno, std::generic_category(), "Failed to bind the Unix domain socket");
     }

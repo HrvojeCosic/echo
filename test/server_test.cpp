@@ -7,12 +7,12 @@ using namespace echoclient;
 using namespace echoserverclient;
 using namespace echoserver;
 
-class ServerTestFixture : public testing::Test { };
+class ServerTestFixture : public testing::Test {};
 
 TEST_F(ServerTestFixture, ServerResponseSchemaTest) {
     const char *argv[] = {"./echo_server", "--set-response-schema", "REVERSE"};
     int argc = sizeof(argv) / sizeof(argv[0]);
-    Server server = SocketFactory::createServer(argc, const_cast<char **>(argv));
+    Server server = Server();
 
     std::string message = "hello";
     server.getResponseSchema()->generateResponse(message);
@@ -48,17 +48,6 @@ TEST_F(ServerTestFixture, ServerListenersTest) {
     EXPECT_NE(unixSocketAdded, nullptr);
 }
 
-TEST_F(ServerTestFixture, ServerCommandsTest) {
-    Server server;
-    std::cout << "---COMMAND TO CHANGE SCHEMA---" << std::endl;
-    server.executeCommand(std::make_unique<StartupTokens>("./echo_server --set-response-schema CENSORED CHAR=s", ' '));
-    auto *commandedSchema = dynamic_cast<CensoredResponseSchema *>(server.getResponseSchema().get());
-    EXPECT_NE(commandedSchema, nullptr);
-
-    std::cout << "---COMMAND TO PRINT USAGE HELP---" << std::endl;
-    bool done = server.executeCommand(std::make_unique<RuntimeTokens>("--help", ' '));
-    EXPECT_TRUE(done);
-}
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
