@@ -35,12 +35,12 @@ TEST_F(ServerTestFixture, ServerResponseSchemaTest) {
 TEST_F(ServerTestFixture, ServerListenersTest) {
     Server server;
 
-    server.addListener(std::make_unique<InetSocket>(4000));
+    server.addListenerSocket(std::make_unique<InetSocket>(4000));
     ASSERT_EQ(server.getListenerPool().size(), 1);
     const InetSocket *inetSocketAdded = dynamic_cast<const InetSocket *>(server.getListenerPool()[0].get());
     EXPECT_NE(inetSocketAdded, nullptr);
 
-    server.addListener(std::make_unique<UnixSocket>(""));
+    server.addListenerSocket(std::make_unique<UnixSocket>(""));
     ASSERT_EQ(server.getListenerPool().size(), 2);
     const UnixSocket *unixSocketAdded = dynamic_cast<const UnixSocket *>(server.getListenerPool()[1].get());
     EXPECT_NE(unixSocketAdded, nullptr);

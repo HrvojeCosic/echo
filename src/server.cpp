@@ -10,7 +10,7 @@ namespace echoserver {
 
 namespace {
 volatile std::sig_atomic_t serverShutdownRequested = false;
-const int maxClients = 50; // denotes max number of clients per listener
+const int maxClients = 50;
 } // namespace
 
 void Server::signalHandler(int signum) {
@@ -19,25 +19,9 @@ void Server::signalHandler(int signum) {
     }
 }
 
-Server::Server() : responseSchema(std::make_unique<EquivalentResponseSchema>()) {
-    clientPool.reserve(maxClients);
-    pollFds.reserve(maxClients);
-}
-
 Server::~Server() {
-    for (auto pollFd : pollFds) {
-        close(pollFd.fd);
-    }
-}
-
-void Server::addListener(echoserverclient::AbstractSocket listener) {
-    try {
-        listener->bind();
-        listener->initOptions(listener->getsocketFd());
-        pollFds.emplace(getNextListenerPollFdsIterator(), pollfd{listener->getsocketFd(), POLLIN, 0});
-        listenerPool.emplace_back(std::move(listener));
-    } catch (const std::runtime_error &e) {
-        std::cerr << e.what() << std::endl;
+    for (auto clientFd : clientFds) {
+        close(clientFd.fd);
     }
 }
 
@@ -45,10 +29,12 @@ void Server::start() {
     std::signal(SIGINT, Server::signalHandler);
     std::signal(SIGTERM, Server::signalHandler);
     try {
-        prepareListeners();
+        prepareListenerSockets();
         while (!serverShutdownRequested) {
-            if (pollFileDescriptors() != -1) {
+            if (pollListenerSockets() != -1) {
                 acceptIncomingConnections();
+            }
+            if (pollClientSockets() != -1) {
                 handleIncomingData();
             }
         }
@@ -57,45 +43,36 @@ void Server::start() {
     }
 }
 
-int Server::pollFileDescriptors() {
-    int numReady = poll(pollFds.data(), pollFds.size(), -1);
+int Server::pollClientSockets() {
+    int numReady = poll(clientFds.data(), clientFds.size(), -1);
     if (numReady == -1 && errno != EINTR) {
-        throw std::system_error(errno, std::generic_category(), "Poll error");
+        throw std::system_error(errno, std::generic_category(), "Client socket poll error");
     }
     return numReady;
 }
 
-void Server::prepareListeners() {
-    for (echoserverclient::AbstractSocket &listener : listenerPool) {
-        if (listen(listener->getsocketFd(), maxClients) == -1) {
-            throw std::system_error(errno, std::generic_category(),
-                                    "Failed to prepare for conection acceptance from listener socket");
-        }
-    }
-}
-
 void Server::acceptIncomingConnections() {
     for (size_t i = 0, end = listenerPool.size(); i < end; i++) {
-        if (pollFds[i].revents & POLLIN) {
+        if (listenerFds[i].revents & POLLIN) {
             int newClientSock = listenerPool[i]->setupNewConnection();
             clientPool.emplace_back(newClientSock);
-            pollFds.emplace_back(pollfd{newClientSock, POLLIN, 0});
+            listenerFds.emplace_back(pollfd{newClientSock, POLLIN, 0});
         }
     }
 }
 
 void Server::handleIncomingData() {
-    for (size_t pollFdIdx = listenerPool.size(), end = pollFds.size(); pollFdIdx < end; pollFdIdx++) {
-        if (!(pollFds[pollFdIdx].revents & (POLLIN | POLLHUP))) {
+    for (size_t i = 0, end = clientFds.size(); i < end; i++) {
+        if (!(clientFds[i].revents & (POLLIN | POLLHUP))) {
             continue;
         }
 
-        int clientSocket = pollFds[pollFdIdx].fd;
+        int clientSocket = clientFds[i].fd;
         char buffer[echoserverclient::bufferSize];
-        int bytesRead = receiveFromClient(pollFdIdx, buffer);
+        int bytesRead = receiveFromClient(i, buffer);
 
         if (bytesRead == 0) {
-            closeClientConnection(pollFdIdx);
+            closeClientConnection(i);
             std::cout << "Connection closed by a client " << std::endl;
         } else {
             std::string data(buffer, bytesRead);
@@ -106,22 +83,22 @@ void Server::handleIncomingData() {
     }
 }
 
-int Server::receiveFromClient(int pollFdIdx, char *buffer) {
-    int bytesRead = recv(pollFds[pollFdIdx].fd, buffer, echoserverclient::bufferSize, 0);
+int Server::receiveFromClient(int idx, char *buffer) {
+    int bytesRead = recv(clientFds[idx].fd, buffer, echoserverclient::bufferSize, 0);
     if (bytesRead == -1) {
         throw std::system_error(errno, std::generic_category(), "Error reading from client");
     }
     return bytesRead;
 }
 
-void Server::closeClientConnection(int pollFdIdx) {
-    int clientSocket = pollFds[pollFdIdx].fd;
+void Server::closeClientConnection(int idx) {
+    int clientSocket = clientFds[idx].fd;
 
     if (close(clientSocket) == -1) {
         throw std::system_error(errno, std::generic_category(), "Error closing client connection");
     }
 
-    pollFds.erase(pollFds.begin() + pollFdIdx);
-    clientPool.erase(pollFdIdxToClientPoolIterator(pollFdIdx));
+    clientFds.erase(clientFds.begin() + idx);
+    clientPool.erase(clientPool.begin() + idx);
 }
 } // namespace echoserver

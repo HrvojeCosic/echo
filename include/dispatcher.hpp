@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 
 #include "./cli_command.hpp"
@@ -14,9 +16,9 @@ using InputToCommandMap = std::unordered_map<std::string, std::unique_ptr<echose
 using DispatcherHelpCliCommand = echoserverclient::HelpCliCommand<Dispatcher>;
 
 //-----------------------------------------------------------------------------------------------------------------------------
-class Dispatcher {
+class Dispatcher : public Listener {
   public:
-    Dispatcher(const int init_server_count = 1);
+    Dispatcher(int initServerCount = 1);
     ~Dispatcher();
     Dispatcher(const Dispatcher &) = delete;
     void operator=(const Dispatcher &) = delete;
@@ -40,36 +42,19 @@ class Dispatcher {
     /* Listens for user input in a REPL, triggering requested commands until requested to stop */
     void cliInputHandler(std::stop_token token);
 
-    /* Prepares listener sockets inside the listener pool */
-    void prepareListeners();
-
-    /* Polls all file descriptors from pollFds, returning the number of file descriptors with events or throwing an
-     * error if necessary */
-    int pollFileDescriptors();
-
     /* Spins up another server process and populates serverPids with the newly created PID */
-    void prepareServer(Server &server);
+    void startServer();
 
     /* Finds a suitable server for an incoming client connection and forwards it to the appropriate process */
-    void forwardIncomingConnection();
-
-    /*  */
-    void addListener(echoserverclient::AbstractSocket listener);
+    void forwardIncomingConnections();
 
     /* inputToCommand maps user CLI inputs to their respective commands that hold command executors */
     InputToCommandMap inputToCommand;
 
     //-----------------------------------------------------------------------------------------------------------------------------
-    /* Currently active servers */
-    std::vector<Server> servers;
+    int serverCount = 0;
 
-    /* PIDs of processes running the servers */
+    /* PIDs of processes running the currently active servers */
     std::vector<int> serverPids;
-
-    /* Sockets listening for requests to the dispatcher */
-    std::vector<echoserverclient::AbstractSocket> listenerPool;
-
-    /* fds to poll (contains only listeners in the case of dispatcher) */
-    std::vector<struct pollfd> pollFds;
 };
 } // namespace echoserver
