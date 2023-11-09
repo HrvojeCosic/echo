@@ -10,8 +10,6 @@
 
 namespace echoserver {
 
-const int maxClients = 50; // denotes max number of clients per listener
-
 using AbstractResponseSchema = std::unique_ptr<IResponseSchema>;
 
 //-----------------------------------------------------------------------------------------------------------------------------

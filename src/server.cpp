@@ -10,7 +10,8 @@ namespace echoserver {
 
 namespace {
 volatile std::sig_atomic_t serverShutdownRequested = false;
-}
+const int maxClients = 50; // denotes max number of clients per listener
+} // namespace
 
 void Server::signalHandler(int signum) {
     if (signum == SIGINT || signum == SIGTERM) {

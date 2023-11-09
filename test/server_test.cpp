@@ -10,8 +10,6 @@ using namespace echoserver;
 class ServerTestFixture : public testing::Test {};
 
 TEST_F(ServerTestFixture, ServerResponseSchemaTest) {
-    const char *argv[] = {"./echo_server", "--set-response-schema", "REVERSE"};
-    int argc = sizeof(argv) / sizeof(argv[0]);
     Server server = Server();
 
     std::string message = "hello";
@@ -47,7 +45,6 @@ TEST_F(ServerTestFixture, ServerListenersTest) {
     const UnixSocket *unixSocketAdded = dynamic_cast<const UnixSocket *>(server.getListenerPool()[1].get());
     EXPECT_NE(unixSocketAdded, nullptr);
 }
-
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
