@@ -16,7 +16,7 @@ using AbstractResponseSchema = std::unique_ptr<IResponseSchema>;
 //-----------------------------------------------------------------------------------------------------------------------------
 class Server : public Listener {
   public:
-    Server() = default;
+    Server(std::string pipeName);
     ~Server();
     Server(const Server &) = delete;
     void operator=(const Server &) = delete;
@@ -40,10 +40,11 @@ class Server : public Listener {
     //-----------------------------------------------------------------------------------------------------------------------------
     void handleClientData(int clientIdx);
 
+    /* polls the client sockets, returning the number of ready sockets or throws an error if necessary  */
     int pollClientSockets();
 
-    /* Goes over all listeners and accepts any incoming connection requests */
-    void acceptIncomingConnections();
+    /* accepts incoming client connections from the pipe if there are any pending */
+    void acceptIncomingClientConnections();
 
     /* Goes over all listeners and  */
     void handleIncomingData();
@@ -55,7 +56,15 @@ class Server : public Listener {
     /* Closes the socket of a client of id "clientIdx" and removes it from tracked client socket state  */
     void closeClientConnection(int clientIdx);
 
+    /* Takes client socket "fd" of another process, duplicates it for current process and returns it, or throws an error
+     * if necessary */
+    int duplicateClientFd(int fd);
+
     //-----------------------------------------------------------------------------------------------------------------------------
+    /* name of the pipe from which the server receives new client socket file descriptors from the dispatcher */
+    std::string pipeName;
+    int pipeFd;
+
     /* Response schema dictates the way server is going to respond in */
     AbstractResponseSchema responseSchema;
 

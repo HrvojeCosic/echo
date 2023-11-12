@@ -1,4 +1,5 @@
 #include <csignal>
+#include <fcntl.h>
 #include <iostream>
 #include <sys/socket.h>
 #include <system_error>
@@ -19,22 +20,41 @@ void Server::signalHandler(int signum) {
     }
 }
 
+Server::Server(std::string pipeName) : pipeName(pipeName) {
+    pipeFd = open(pipeName.c_str(), O_RDWR);
+
+    if (pipeFd == -1) {
+        throw std::system_error(errno, std::generic_category(), "Server pipe opening error");
+    }
+
+    int fcntlRes = fcntl(pipeFd, F_SETFL, fcntl(pipeFd, F_GETFL) | O_NONBLOCK);
+    if (fcntlRes == -1) {
+        throw std::system_error(errno, std::generic_category(), "Setting pipe mode to non-blocking error");
+    }
+
+    responseSchema = std::make_unique<EquivalentResponseSchema>();
+}
+
 Server::~Server() {
     for (auto clientFd : clientFds) {
         close(clientFd.fd);
     }
+    close(pipeFd);
+    unlink(pipeName.c_str());
 }
 
 void Server::start() {
     std::signal(SIGINT, Server::signalHandler);
     std::signal(SIGTERM, Server::signalHandler);
+
     try {
         prepareListenerSockets();
         while (!serverShutdownRequested) {
-            if (pollListenerSockets() != -1) {
-                acceptIncomingConnections();
-            }
-            if (pollClientSockets() != -1) {
+            // TODO: see if it makes sense to combine two poll processes (pipe and client sockets) with a timeout into
+            // one blocking poll process
+            acceptIncomingClientConnections();
+
+            if (pollClientSockets() > 0) {
                 handleIncomingData();
             }
         }
@@ -43,22 +63,46 @@ void Server::start() {
     }
 }
 
+// Warning: this returns without blocking/timeout if there's no new data on the pipe
+void Server::acceptIncomingClientConnections() {
+    char pipeBuf[sizeof(int)];
+
+    while (true) {
+        ssize_t bytesRead = read(pipeFd, pipeBuf, sizeof(pipeBuf));
+        bool hasDataAvailable = bytesRead != 0 && !(bytesRead == -1 && errno == EAGAIN);
+
+        if (!hasDataAvailable) {
+            break;
+        } else if (bytesRead == -1) {
+            throw std::system_error(errno, std::generic_category(), "Reading client socket fd from the pipe error");
+        }
+
+        int newClientFd = duplicateClientFd(std::stoi(pipeBuf));
+        clientPool.emplace_back(newClientFd);
+        clientFds.emplace_back(pollfd{newClientFd, POLLIN, 0});
+    }
+}
+
+int Server::duplicateClientFd(int fd) {
+    int ppidFd = syscall(SYS_pidfd_open, getppid(), 0);
+    if (ppidFd == -1) {
+        throw std::system_error(errno, std::generic_category(), "Getting parent pidfd error");
+    }
+
+    int clientFd = syscall(SYS_pidfd_getfd, ppidFd, fd, 0);
+    if (clientFd == -1) {
+        throw std::system_error(errno, std::generic_category(), "Duplicating client fd error");
+    }
+    
+    return clientFd;
+}
+
 int Server::pollClientSockets() {
-    int numReady = poll(clientFds.data(), clientFds.size(), -1);
+    int numReady = poll(clientFds.data(), clientFds.size(), 1000);
     if (numReady == -1 && errno != EINTR) {
         throw std::system_error(errno, std::generic_category(), "Client socket poll error");
     }
     return numReady;
-}
-
-void Server::acceptIncomingConnections() {
-    for (size_t i = 0, end = listenerPool.size(); i < end; i++) {
-        if (listenerFds[i].revents & POLLIN) {
-            int newClientSock = listenerPool[i]->setupNewConnection();
-            clientPool.emplace_back(newClientSock);
-            listenerFds.emplace_back(pollfd{newClientSock, POLLIN, 0});
-        }
-    }
 }
 
 void Server::handleIncomingData() {

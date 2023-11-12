@@ -10,6 +10,7 @@ namespace echoserver {
 
 const int startPort = 6000; // port of the dispatcher (server ports follow it)
 const std::string startUnixPath = "/tmp/unix_socket";
+const std::string startPipePath = "/tmp/fifo";
 
 using ResponseSchemaCliCommand = echoserverclient::ChangeResponseSchemaCliCommand;
 using InputToCommandMap = std::unordered_map<std::string, std::unique_ptr<echoserverclient::CliCommand<Dispatcher>>>;
@@ -51,10 +52,25 @@ class Dispatcher : public Listener {
     /* inputToCommand maps user CLI inputs to their respective commands that hold command executors */
     InputToCommandMap inputToCommand;
 
-    //-----------------------------------------------------------------------------------------------------------------------------
-    int serverCount = 0;
+    inline int getServerPidAtIdx(int idx) { return servers[idx].first; }
 
-    /* PIDs of processes running the currently active servers */
-    std::vector<int> serverPids;
+    inline int getServerIdAtIdx(int idx) { return servers[idx].second; }
+
+    inline std::string serverIdToPipePath(int idx) { return startPipePath + std::to_string(idx); }
+
+    inline std::string serverIdToUnixPath(int idx) { return startUnixPath + std::to_string(idx); }
+
+    inline int serverIdToPort(int idx) { return startPort + idx; }
+
+    //-----------------------------------------------------------------------------------------------------------------------------
+    int latestServerId = 0;
+
+    /* (TODO:to be deleted after introducing more balancing methods) variable tracking what is the index of a PID inside
+     * serverPids that last received a client connection request  */
+    int lastReceivingServerIdx = 0;
+
+    /* Pairs <ProcessId, ServerId> representing processes running the currently active servers */
+    // TODO: consider using pidfd instead of the pid for better safety
+    std::vector<std::pair<int, int>> servers;
 };
 } // namespace echoserver

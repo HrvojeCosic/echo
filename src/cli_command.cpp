@@ -10,12 +10,12 @@ namespace echoserverclient {
 
 // TODO: maybe support futher help parameters (e.g --help change-response-schema)?
 CLI_COMMAND_TYPE void HelpCliCommand<APP_T>::execute([[maybe_unused]] AbstractTokens tokens) const {
-    if constexpr (std::same_as<APP_T, echoserver::Server>) {
+    if constexpr (std::same_as<APP_T, echoserver::Dispatcher>) {
         std::cout << "Usage: " << std::endl;
         std::cout << "On startup: "
-                  << "./echo_server [OPTION]" << std::endl;
+                  << "sudo ./dispatcher [OPTION]" << std::endl;
         std::cout << "During runtime: "
-                  << "./echo_server [OPTION]" << std::endl;
+                  << "[OPTION]" << std::endl;
         std::cout << "--set-response-schema "
                   << "EQUIVALENT/REVERSE/CENSORED CHAR=c/PALINDROME" << std::endl;
     } else if constexpr (std::same_as<APP_T, echoclient::Client>) {
@@ -40,9 +40,12 @@ void SendToServerCliCommand::execute(AbstractTokens tokens) const {
     int clientFd = app.getClientSocket()->getsocketFd();
     std::string userInput = tokens->detokenize(' ');
 
-    send(clientFd, userInput.c_str(), userInput.length(), 0);
-    int bytesRead = recv(clientFd, buffer, sizeof(buffer), 0);
+    int bytesSent = send(clientFd, userInput.c_str(), userInput.length(), 0);
+    if (bytesSent == -1) {
+        std::cerr << "Couldn't send data to server. " << errno << std::endl;
+    }
 
+    int bytesRead = recv(clientFd, buffer, sizeof(buffer), 0);
     if (bytesRead <= 0) {
         std::cout << "Connection to the server terminated." << std::endl;
         echoclient::Client::signalHandler(SIGTERM);

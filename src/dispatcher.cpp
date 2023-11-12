@@ -1,8 +1,10 @@
 #include <condition_variable>
 #include <csignal>
+#include <fcntl.h>
 #include <iostream>
 #include <memory>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <system_error>
 #include <thread>
 
@@ -15,24 +17,22 @@ volatile std::sig_atomic_t shutdownRequested = false;
 } // namespace
 
 Dispatcher::Dispatcher(int initServerCount) {
-    serverPids.reserve(initServerCount);
+    servers.reserve(initServerCount);
 
-    // Setup dispatcher listeners
-    addListenerSocket(std::make_unique<echoserverclient::InetSocket>(startPort));
-    addListenerSocket(std::make_unique<echoserverclient::UnixSocket>(startUnixPath));
+    this->addListenerSocket(std::make_unique<echoserverclient::InetSocket>(startPort));
+    this->addListenerSocket(std::make_unique<echoserverclient::UnixSocket>(startUnixPath));
 
     while (--initServerCount >= 0) {
         startServer();
     }
 
-    // Setup available dispatcher CLI commands
     inputToCommand["--set-response-schema"] = std::make_unique<ResponseSchemaCliCommand>(*this);
     inputToCommand["--help"] = std::make_unique<DispatcherHelpCliCommand>(*this);
 }
 
 Dispatcher::~Dispatcher() {
-    for (int pid : serverPids) {
-        kill(pid, SIGTERM);
+    for (int i = 0; i < servers.size(); i++) {
+        kill(getServerPidAtIdx(i), SIGTERM);
     }
 }
 
@@ -60,27 +60,52 @@ void Dispatcher::start() {
     std::cout << "\nDispatcher terminated." << std::endl;
 }
 
-void Dispatcher::forwardIncomingConnections() {
-    // TODO
-}
-
 void Dispatcher::startServer() {
+    latestServerId++;
+
+    std::string pipeName = serverIdToPipePath(latestServerId);
+    mkfifo(pipeName.c_str(), O_RDWR);
+
     int pid = fork();
+
     if (pid == -1) {
-        throw std::system_error(errno, std::generic_category(), "Failed to start the new server process");
+        latestServerId--;
+        std::cerr << "Failed to start the new server process. " << errno << std::endl;
     } else if (pid == 0) {
         // Child process
-        Server server;
-        serverCount++;
-        server.addListenerSocket(std::make_unique<echoserverclient::UnixSocket>(startUnixPath + std::to_string(serverCount)));
-        server.addListenerSocket(std::make_unique<echoserverclient::InetSocket>(startPort + serverCount));
-        //TOOD: handle not being able to use current port number
+        Server server(pipeName);
+        server.addListenerSocket(std::make_unique<echoserverclient::UnixSocket>(serverIdToUnixPath(latestServerId)));
+        server.addListenerSocket(std::make_unique<echoserverclient::InetSocket>(serverIdToPort(latestServerId)));
         server.start();
         exit(0);
     } else {
         // Parent process
-        serverCount++;
-        serverPids.push_back(pid);
+        servers.push_back(std::make_pair(pid, latestServerId));
+    }
+}
+
+void Dispatcher::forwardIncomingConnections() {
+    for (size_t i = 0, end = listenerFds.size(); i < end; i++) {
+        if (!(listenerFds[i].revents & POLLIN)) {
+            continue;
+        }
+
+        // TODO: check if the process is still running?
+        int nextIdx = (lastReceivingServerIdx++) % servers.size();
+        int serverPid = getServerPidAtIdx(nextIdx);
+        int pipeFd = open(serverIdToPipePath(getServerIdAtIdx(nextIdx)).c_str(), O_WRONLY);
+        if (pipeFd == -1) {
+            throw std::system_error(errno, std::generic_category(), "Failed to open the dispatcher->server pipe");
+        }
+
+        std::string newClientFdStr = std::to_string(listenerPool[i]->setupNewConnection());
+        ssize_t bytesWritten = write(pipeFd, newClientFdStr.c_str(), newClientFdStr.size());
+        if (bytesWritten == -1) {
+            close(pipeFd);
+            throw std::system_error(errno, std::generic_category(), "Failed to write to the dispatcher->server pipe");
+        }
+        
+        close(pipeFd);
     }
 }
 
@@ -100,17 +125,6 @@ void Dispatcher::cliInputHandler(std::stop_token token) {
             inputToCommand["--help"]->execute(std::move(tokens));
         }
     }
-}
-
-bool Dispatcher::executeCommand(echoserverclient::AbstractTokens tokens) {
-    auto command = tokens->getOption();
-    bool exists = inputToCommand.find(command) != inputToCommand.end();
-
-    if (exists) {
-        inputToCommand[command]->execute(std::move(tokens));
-    }
-
-    return exists;
 }
 
 void Dispatcher::setResponseSchema(AbstractResponseSchema schema) {

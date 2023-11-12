@@ -7,7 +7,7 @@
 namespace echoserver {
 
 namespace {
-int listenerQueueSize = 50;
+const int listenerQueueSize = 50;
 }
 
 void Listener::addListenerSocket(echoserverclient::AbstractSocket listener) {

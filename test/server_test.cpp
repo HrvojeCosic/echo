@@ -10,7 +10,7 @@ using namespace echoserver;
 class ServerTestFixture : public testing::Test {};
 
 TEST_F(ServerTestFixture, ServerResponseSchemaTest) {
-    Server server = Server();
+    Server server = Server("");
 
     std::string message = "hello";
     server.getResponseSchema()->generateResponse(message);
@@ -33,7 +33,7 @@ TEST_F(ServerTestFixture, ServerResponseSchemaTest) {
 }
 
 TEST_F(ServerTestFixture, ServerListenersTest) {
-    Server server;
+    Server server("");
 
     server.addListenerSocket(std::make_unique<InetSocket>(4000));
     ASSERT_EQ(server.getListenerPool().size(), 1);
