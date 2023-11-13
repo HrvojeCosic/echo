@@ -7,11 +7,15 @@ project(server-client VERSION 0.0.1)
 enable_testing()
 
 #Compiler flags
-#set(CMAKE_CXX_COMPILER /usr/bin/g++) TODO (only if you need this flag): causing infinite loop so removed it 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -Werror -Wno-missing-braces")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-unused-parameter -Wno-attributes")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -fsanitize=address")
 
 #Subdirs
+option(WITH_TESTS "Includes tests in building process" OFF)
+
 add_subdirectory(src)
-add_subdirectory(test)
+
+if (WITH_TESTS)
+    add_subdirectory(test)
+endif()

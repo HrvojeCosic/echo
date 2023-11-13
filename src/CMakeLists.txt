@@ -5,7 +5,6 @@ add_library(
     server.cpp
     client.cpp
     cli_command.cpp
-    client.cpp
     inet_socket.cpp
     response_schema.cpp
     response_schema_factory.cpp
