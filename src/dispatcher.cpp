@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <system_error>
 #include <thread>
+#include <unistd.h>
 
 #include "../include/dispatcher.hpp"
 
@@ -73,11 +74,15 @@ void Dispatcher::startServer() {
         std::cerr << "Failed to start the new server process. " << errno << std::endl;
     } else if (pid == 0) {
         // Child process
-        Server server(pipeName);
-        server.addListenerSocket(std::make_unique<echoserverclient::UnixSocket>(serverIdToUnixPath(latestServerId)));
-        server.addListenerSocket(std::make_unique<echoserverclient::InetSocket>(serverIdToPort(latestServerId)));
-        server.start();
-        exit(0);
+        // After the server is finished running, clean it up and exit out of the child process
+        {
+            Server server(pipeName);
+            server.addListenerSocket(
+                std::make_unique<echoserverclient::UnixSocket>(serverIdToUnixPath(latestServerId)));
+            server.addListenerSocket(std::make_unique<echoserverclient::InetSocket>(serverIdToPort(latestServerId)));
+            server.start();
+        }
+        std::exit(0);
     } else {
         // Parent process
         servers.push_back(std::make_pair(pid, latestServerId));
@@ -104,7 +109,7 @@ void Dispatcher::forwardIncomingConnections() {
             close(pipeFd);
             throw std::system_error(errno, std::generic_category(), "Failed to write to the dispatcher->server pipe");
         }
-        
+
         close(pipeFd);
     }
 }

@@ -10,6 +10,17 @@ namespace {
 const int listenerQueueSize = 50;
 }
 
+Listener::~Listener() {
+    for (auto &listener : getListenerPool()) {
+        close(listener->getsocketFd());
+
+        auto uds = dynamic_cast<echoserverclient::UnixSocket *>(listener.get());
+        if (uds) {
+            unlink(uds->getSocketPath().c_str());
+        }
+    }
+}
+
 void Listener::addListenerSocket(echoserverclient::AbstractSocket listener) {
     try {
         listener->bind();

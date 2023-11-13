@@ -8,10 +8,12 @@ namespace echoserver {
 
 class Listener {
   public:
-    virtual ~Listener(){};
+    virtual ~Listener();
 
     /* Sets up the "listener" and adds it to the tracked socket state */
     void addListenerSocket(echoserverclient::AbstractSocket listener);
+    
+    inline const std::vector<echoserverclient::AbstractSocket> &getListenerPool() const { return listenerPool; }
 
   protected:
     //-----------------------------------------------------------------------------------------------------------------------------

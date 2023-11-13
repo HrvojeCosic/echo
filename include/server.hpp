@@ -32,8 +32,6 @@ class Server : public Listener {
 
     inline const AbstractResponseSchema &getResponseSchema() const { return responseSchema; }
 
-    inline const std::vector<echoserverclient::AbstractSocket> &getListenerPool() const { return listenerPool; }
-
     inline const std::vector<int> &getClientPool() const { return clientPool; }
 
   private:
