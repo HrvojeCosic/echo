@@ -132,6 +132,17 @@ void Dispatcher::cliInputHandler(std::stop_token token) {
     }
 }
 
+bool Dispatcher::executeCommand(echoserverclient::AbstractTokens tokens) {
+    auto command = tokens->getOption();
+    bool exists = inputToCommand.find(command) != inputToCommand.end();
+
+    if (exists) {
+        inputToCommand[command]->execute(std::move(tokens));
+    }
+
+    return exists;
+}
+
 void Dispatcher::setResponseSchema(AbstractResponseSchema schema) {
     // TODO
 }
