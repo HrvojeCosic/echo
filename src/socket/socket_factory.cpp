@@ -1,7 +1,7 @@
 #include <cstring>
 #include <memory>
 
-#include "../include/socket_factory.hpp"
+#include "socket/socket_factory.hpp"
 
 namespace echoserverclient {
 

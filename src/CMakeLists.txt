@@ -1,27 +1,26 @@
-add_library(
-    echoclientserver
-    listener.cpp
-    dispatcher.cpp
-    server.cpp
-    client.cpp
-    cli_command.cpp
-    inet_socket.cpp
-    response_schema.cpp
-    response_schema_factory.cpp
-    socket_factory.cpp
-    tokens.cpp
-    unix_socket.cpp
+add_subdirectory(CLI)
+add_subdirectory(client)
+add_subdirectory(listener)
+add_subdirectory(socket)
+
+add_library(echoserver STATIC ${ALL_OBJECT_FILES})
+
+set(ECHOSERVER_LIBS
+        echoserver_CLI
+        echoserver_client
+        echoserver_listener
+        echoserver_socket
 )
 
 add_executable(
     dispatcher
-    dispatcher_main.cpp
+    listener/dispatcher_main.cpp
 )
 
 add_executable(
     echo_client
-    client_main.cpp
+    client/client_main.cpp
 )
 
-target_link_libraries(echo_client PRIVATE echoclientserver)
-target_link_libraries(dispatcher PRIVATE echoclientserver)
+target_link_libraries(dispatcher PRIVATE ${ECHOSERVER_LIBS})
+target_link_libraries(echo_client PRIVATE ${ECHOSERVER_LIBS})

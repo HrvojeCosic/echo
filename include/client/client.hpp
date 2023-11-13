@@ -3,8 +3,8 @@
 #include <stop_token>
 #include <unordered_map>
 
-#include "./cli_command.hpp"
-#include "./socket.hpp"
+#include "CLI/cli_command.hpp"
+#include "socket/socket.hpp"
 
 namespace echoclient {
 

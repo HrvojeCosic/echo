@@ -3,7 +3,7 @@
 #include <iostream>
 #include <thread>
 
-#include "../include/client.hpp"
+#include "client/client.hpp"
 
 namespace echoclient {
 

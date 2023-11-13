@@ -4,10 +4,10 @@
 #include <stop_token>
 #include <unordered_map>
 
-#include "./cli_command.hpp"
-#include "./listener.hpp"
-#include "./response_schema.hpp"
-#include "./socket.hpp"
+#include "CLI/cli_command.hpp"
+#include "listener/listener.hpp"
+#include "listener/response_schema.hpp"
+#include "socket/socket.hpp"
 
 namespace echoserver {
 

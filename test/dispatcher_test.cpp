@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../include/dispatcher.hpp"
+#include "listener/dispatcher.hpp"
 
 using namespace echoclient;
 using namespace echoserverclient;

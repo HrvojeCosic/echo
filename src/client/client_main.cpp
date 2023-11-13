@@ -1,5 +1,5 @@
-#include "../include/client.hpp"
-#include "../include/socket_factory.hpp"
+#include "client/client.hpp"
+#include "socket/socket_factory.hpp"
 #include <iostream>
 #include <stdexcept>
 

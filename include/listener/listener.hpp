@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./socket.hpp"
+#include "socket/socket.hpp"
 #include <sys/poll.h>
 #include <vector>
 

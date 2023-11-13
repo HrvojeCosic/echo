@@ -24,6 +24,6 @@ foreach(test_info IN LISTS tests)
     list(GET test_info_list 1 source_file)
 
     add_executable(${test_name} ${source_file})
-    target_link_libraries(${test_name} PRIVATE GTest::gtest echoclientserver)
+    target_link_libraries(${test_name} PRIVATE GTest::gtest echoserver)
     add_test(${test_name}_gtest ${test_name})
 endforeach()

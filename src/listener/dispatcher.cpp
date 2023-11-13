@@ -9,7 +9,7 @@
 #include <thread>
 #include <unistd.h>
 
-#include "../include/dispatcher.hpp"
+#include "listener/dispatcher.hpp"
 
 namespace echoserver {
 

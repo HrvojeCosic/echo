@@ -1,4 +1,4 @@
-#include "../include/tokens.hpp"
+#include "CLI/tokens.hpp"
 #include <gtest/gtest.h>
 
 using namespace echoserverclient;

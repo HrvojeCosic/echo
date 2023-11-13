@@ -2,9 +2,9 @@
 
 #include <vector>
 
-#include "./cli_command.hpp"
-#include "./listener.hpp"
-#include "./server.hpp"
+#include "CLI/cli_command.hpp"
+#include "listener/listener.hpp"
+#include "listener/server.hpp"
 
 namespace echoserver {
 

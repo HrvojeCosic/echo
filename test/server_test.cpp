@@ -1,8 +1,8 @@
 #include <fcntl.h>
 #include <gtest/gtest.h>
 
-#include "../include/server.hpp"
-#include "../include/socket_factory.hpp"
+#include "listener/server.hpp"
+#include "socket/socket_factory.hpp"
 
 using namespace echoclient;
 using namespace echoserverclient;

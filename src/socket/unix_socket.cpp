@@ -5,7 +5,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#include "../include/socket.hpp"
+#include "socket/socket.hpp"
 
 namespace echoserverclient {
 

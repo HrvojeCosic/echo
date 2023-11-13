@@ -1,6 +1,6 @@
 #include <sstream>
 
-#include "../include/tokens.hpp"
+#include "CLI/tokens.hpp"
 
 namespace echoserverclient {
 

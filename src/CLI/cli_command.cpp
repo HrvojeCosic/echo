@@ -2,9 +2,9 @@
 #include <iostream>
 #include <sys/socket.h>
 
-#include "../include/client.hpp"
-#include "../include/dispatcher.hpp"
-#include "../include/response_schema_factory.hpp"
+#include "client/client.hpp"
+#include "listener/dispatcher.hpp"
+#include "listener/response_schema_factory.hpp"
 
 namespace echoserverclient {
 
