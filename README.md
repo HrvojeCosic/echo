@@ -6,4 +6,4 @@
 * Run the client using `sudo ./build/src/echo_client localhost 6000` or `sudo ./build/src/echo_client /tmp/unix_socket` and enter your message into the CLI
 
 ## Tests
-* To run all tests, use `./scripts/run_tests.sh`. 
+* To run all tests, use `sudo ./scripts/run_tests.sh`. 
