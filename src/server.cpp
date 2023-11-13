@@ -21,11 +21,13 @@ void Server::signalHandler(int signum) {
 }
 
 Server::Server(std::string pipeName) : pipeName(pipeName) {
-    pipeFd = open(pipeName.c_str(), O_RDWR);
+    int pipeFd = open(pipeName.c_str(), O_RDWR);
 
     if (pipeFd == -1) {
         throw std::system_error(errno, std::generic_category(), "Server pipe opening error");
     }
+
+    fdsToPoll.emplace_back(pollfd{pipeFd, POLLIN, 0});
 
     int fcntlRes = fcntl(pipeFd, F_SETFL, fcntl(pipeFd, F_GETFL) | O_NONBLOCK);
     if (fcntlRes == -1) {
@@ -36,10 +38,11 @@ Server::Server(std::string pipeName) : pipeName(pipeName) {
 }
 
 Server::~Server() {
-    for (auto clientFd : clientFds) {
-        close(clientFd.fd);
+    for (int i = getClientFdStartIdx(); i < fdsToPoll.size(); i++) {
+        close(fdsToPoll[i].fd);
     }
-    close(pipeFd);
+
+    close(getPipePollFd().fd);
     unlink(pipeName.c_str());
 }
 
@@ -49,12 +52,9 @@ void Server::start() {
 
     try {
         prepareListenerSockets();
-        while (!serverShutdownRequested) {
-            // TODO: see if it makes sense to combine two poll processes (pipe and client sockets) with a timeout into
-            // one blocking poll process
-            acceptIncomingClientConnections();
 
-            if (pollClientSockets() > 0) {
+        while (!serverShutdownRequested) {
+            if (pollFileDescriptors() > 0) {
                 handleIncomingData();
             }
         }
@@ -63,12 +63,11 @@ void Server::start() {
     }
 }
 
-// Warning: this returns without blocking/timeout if there's no new data on the pipe
 void Server::acceptIncomingClientConnections() {
     char pipeBuf[sizeof(int)];
 
     while (true) {
-        ssize_t bytesRead = read(pipeFd, pipeBuf, sizeof(pipeBuf));
+        ssize_t bytesRead = read(getPipePollFd().fd, pipeBuf, sizeof(pipeBuf));
         bool hasDataAvailable = bytesRead != 0 && !(bytesRead == -1 && errno == EAGAIN);
 
         if (!hasDataAvailable) {
@@ -79,7 +78,7 @@ void Server::acceptIncomingClientConnections() {
 
         int newClientFd = duplicateClientFd(std::stoi(pipeBuf));
         clientPool.emplace_back(newClientFd);
-        clientFds.emplace_back(pollfd{newClientFd, POLLIN, 0});
+        fdsToPoll.emplace_back(pollfd{newClientFd, POLLIN, 0});
     }
 }
 
@@ -97,21 +96,25 @@ int Server::duplicateClientFd(int fd) {
     return clientFd;
 }
 
-int Server::pollClientSockets() {
-    int numReady = poll(clientFds.data(), clientFds.size(), 1000);
+int Server::pollFileDescriptors() {
+    int numReady = poll(fdsToPoll.data(), fdsToPoll.size(), -1);
     if (numReady == -1 && errno != EINTR) {
-        throw std::system_error(errno, std::generic_category(), "Client socket poll error");
+        throw std::system_error(errno, std::generic_category(), "Server poll fds error");
     }
     return numReady;
 }
 
 void Server::handleIncomingData() {
-    for (size_t i = 0, end = clientFds.size(); i < end; i++) {
-        if (!(clientFds[i].revents & (POLLIN | POLLHUP))) {
+    if (getPipePollFd().revents & POLLIN) {
+        acceptIncomingClientConnections();
+    }
+
+    for (size_t i = getClientFdStartIdx(), end = fdsToPoll.size(); i < end; i++) {
+        if (!(fdsToPoll[i].revents & (POLLIN | POLLHUP))) {
             continue;
         }
 
-        int clientSocket = clientFds[i].fd;
+        int clientSocket = fdsToPoll[i].fd;
         char buffer[echoserverclient::bufferSize];
         int bytesRead = receiveFromClient(i, buffer);
 
@@ -127,22 +130,22 @@ void Server::handleIncomingData() {
     }
 }
 
-int Server::receiveFromClient(int idx, char *buffer) {
-    int bytesRead = recv(clientFds[idx].fd, buffer, echoserverclient::bufferSize, 0);
+int Server::receiveFromClient(int pollFdIdx, char *buffer) {
+    int bytesRead = recv(fdsToPoll[pollFdIdx].fd, buffer, echoserverclient::bufferSize, 0);
     if (bytesRead == -1) {
         throw std::system_error(errno, std::generic_category(), "Error reading from client");
     }
     return bytesRead;
 }
 
-void Server::closeClientConnection(int idx) {
-    int clientSocket = clientFds[idx].fd;
+void Server::closeClientConnection(int pollFdIdx) {
+    int clientSocket = fdsToPoll[pollFdIdx].fd;
 
     if (close(clientSocket) == -1) {
         throw std::system_error(errno, std::generic_category(), "Error closing client connection");
     }
 
-    clientFds.erase(clientFds.begin() + idx);
-    clientPool.erase(clientPool.begin() + idx);
+    fdsToPoll.erase(fdsToPoll.begin() + pollFdIdx);
+    clientPool.erase(clientPool.begin() + (pollFdIdx - getClientFdStartIdx()));
 }
 } // namespace echoserver

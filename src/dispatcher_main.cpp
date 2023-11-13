@@ -10,7 +10,8 @@ int main(int argc, char *argv[]) {
         auto optionTok = tokens->getOption();
         if (!optionTok.empty()) {
             if (dispatcher.executeCommand(std::move(tokens)) == false) {
-                dispatcher.executeCommand(std::make_unique<echoserverclient::StartupTokens>("./dispatcher --help", ' '));
+                dispatcher.executeCommand(
+                    std::make_unique<echoserverclient::StartupTokens>("./dispatcher --help", ' '));
             }
         }
 

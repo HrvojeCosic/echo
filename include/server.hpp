@@ -34,25 +34,29 @@ class Server : public Listener {
 
     inline const std::vector<int> &getClientPool() const { return clientPool; }
 
+    inline const struct pollfd &getPipePollFd() const { return fdsToPoll[0]; }
+
+    inline const int getClientFdStartIdx() const { return 1; }
+
   private:
     //-----------------------------------------------------------------------------------------------------------------------------
     void handleClientData(int clientIdx);
 
-    /* polls the client sockets, returning the number of ready sockets or throws an error if necessary  */
-    int pollClientSockets();
+    /* polls the "fdsToPoll", returning the number of ready fds or throws an error if necessary  */
+    int pollFileDescriptors();
 
     /* accepts incoming client connections from the pipe if there are any pending */
     void acceptIncomingClientConnections();
 
-    /* Goes over all listeners and  */
+    /* Goes over all listeners and handles incoming data if there is any */
     void handleIncomingData();
 
     /* Receives data from socket of pollFdIdx and returns number of bytes read or throws an error if necessary, closing
      * the connection to that socket */
     int receiveFromClient(int pollFdIdx, char *buffer);
 
-    /* Closes the socket of a client of id "clientIdx" and removes it from tracked client socket state  */
-    void closeClientConnection(int clientIdx);
+    /* Closes the socket of a client of id "pollFdIdx" and removes it from tracked client socket state  */
+    void closeClientConnection(int pollFdIdx);
 
     /* Takes client socket "fd" of another process, duplicates it for current process and returns it, or throws an error
      * if necessary */
@@ -61,7 +65,6 @@ class Server : public Listener {
     //-----------------------------------------------------------------------------------------------------------------------------
     /* name of the pipe from which the server receives new client socket file descriptors from the dispatcher */
     std::string pipeName;
-    int pipeFd;
 
     /* Response schema dictates the way server is going to respond in */
     AbstractResponseSchema responseSchema;
@@ -69,8 +72,11 @@ class Server : public Listener {
     /* clientPool contains client socket file descriptors of clients connected to this server */
     std::vector<int> clientPool;
 
-    /* clientFds contains the pollfd list of currently active clients */
-    std::vector<struct pollfd> clientFds;
+    /* pollFds contains the file descriptors to poll with the following format:
+     * First element is the dispatcher->server pipe file descriptor.
+     * The rest of the elements are file descriptors of currently active clients on this server
+     */
+    std::vector<struct pollfd> fdsToPoll;
     //-----------------------------------------------------------------------------------------------------------------------------
 };
 } // namespace echoserver
