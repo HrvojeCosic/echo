@@ -11,6 +11,10 @@
 
 namespace echoserver {
 
+const std::byte newClientFdPipeFlag = std::byte(0x01);
+const std::byte commandPipeFlag = std::byte(0x02);
+
+using ResponseSchemaCliCommand = echoserverclient::ChangeResponseSchemaCliCommand;
 using AbstractResponseSchema = std::unique_ptr<IResponseSchema>;
 
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -46,7 +50,7 @@ class Server : public Listener {
     int pollFileDescriptors();
 
     /* accepts incoming client connections from the pipe if there are any pending */
-    void acceptIncomingClientConnections();
+    void acceptPipeData();
 
     /* Goes over all listeners and handles incoming data if there is any */
     void handleIncomingData();
@@ -61,6 +65,17 @@ class Server : public Listener {
     /* Takes client socket "fd" of another process, duplicates it for current process and returns it, or throws an error
      * if necessary */
     int duplicateClientFd(int fd);
+
+    void decodePipeMessage(std::byte pipeFlag);
+
+    /* Takes a command without knowing its type (runtime command / startup command) and sets the response schema
+     * if it can be deduced from the command
+     *
+     * TODO: This is a bit hacky since it potentially tries all token types. Try to think of something better
+     */
+    void setResponseSchemaFromCommand(std::string command);
+
+    template <typename T> ssize_t readPipe(T dest, std::string errorMsg);
 
     //-----------------------------------------------------------------------------------------------------------------------------
     /* name of the pipe from which the server receives new client socket file descriptors from the dispatcher */

@@ -1,5 +1,7 @@
+#include <array>
 #include <condition_variable>
 #include <csignal>
+#include <cstring>
 #include <fcntl.h>
 #include <iostream>
 #include <memory>
@@ -103,8 +105,13 @@ void Dispatcher::forwardIncomingConnections() {
             throw std::system_error(errno, std::generic_category(), "Failed to open the dispatcher->server pipe");
         }
 
-        std::string newClientFdStr = std::to_string(listenerPool[i]->setupNewConnection());
-        ssize_t bytesWritten = write(pipeFd, newClientFdStr.c_str(), newClientFdStr.size());
+        int clientFd = listenerPool[i]->setupNewConnection();
+
+        std::array<std::byte, sizeof(std::byte) + sizeof(int)> clientFdBuf;
+        clientFdBuf[0] = newClientFdPipeFlag;
+        std::memcpy(&clientFdBuf[sizeof(std::byte)], &clientFd, sizeof(int));
+
+        ssize_t bytesWritten = write(pipeFd, &clientFdBuf, sizeof(clientFdBuf));
         if (bytesWritten == -1) {
             close(pipeFd);
             throw std::system_error(errno, std::generic_category(), "Failed to write to the dispatcher->server pipe");
@@ -143,7 +150,4 @@ bool Dispatcher::executeCommand(echoserverclient::AbstractTokens tokens) {
     return exists;
 }
 
-void Dispatcher::setResponseSchema(AbstractResponseSchema schema) {
-    // TODO
-}
 } // namespace echoserver

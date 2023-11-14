@@ -1,5 +1,5 @@
-#include "listener/response_schema_factory.hpp"
 #include "CLI/tokens.hpp"
+#include "listener/response_schema_factory.hpp"
 #include <gtest/gtest.h>
 
 using namespace echoserverclient;

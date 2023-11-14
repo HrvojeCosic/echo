@@ -1,13 +1,17 @@
 #include <csignal>
 #include <fcntl.h>
 #include <iostream>
+#include <memory>
 #include <sys/socket.h>
 #include <system_error>
 #include <unistd.h>
 
+#include "listener/response_schema_factory.hpp"
 #include "listener/server.hpp"
 
 namespace echoserver {
+
+using namespace echoserverclient;
 
 namespace {
 volatile std::sig_atomic_t serverShutdownRequested = false;
@@ -63,22 +67,71 @@ void Server::start() {
     }
 }
 
-void Server::acceptIncomingClientConnections() {
-    char pipeBuf[sizeof(int)];
+void Server::acceptPipeData() {
+    std::byte pipeFlag;
 
     while (true) {
-        ssize_t bytesRead = read(getPipePollFd().fd, pipeBuf, sizeof(pipeBuf));
+        ssize_t bytesRead = read(getPipePollFd().fd, &pipeFlag, sizeof(pipeFlag));
         bool hasDataAvailable = bytesRead != 0 && !(bytesRead == -1 && errno == EAGAIN);
-
         if (!hasDataAvailable) {
             break;
         } else if (bytesRead == -1) {
-            throw std::system_error(errno, std::generic_category(), "Reading client socket fd from the pipe error");
+            throw std::system_error(errno, std::generic_category(), "Reading pipe flag from the pipe error");
         }
 
-        int newClientFd = duplicateClientFd(std::stoi(pipeBuf));
+        decodePipeMessage(pipeFlag);
+    }
+}
+
+void Server::decodePipeMessage(std::byte pipeFlag) {
+    if (pipeFlag == newClientFdPipeFlag) {
+        int decodedClientFd;
+        ssize_t bytesRead = read(getPipePollFd().fd, &decodedClientFd, sizeof(decodedClientFd));
+
+        bool hasDataAvailable = bytesRead != 0 && !(bytesRead == -1 && errno == EAGAIN);
+        if (!hasDataAvailable) {
+            // TODO: this shouldn't really happen, but maybe send back the error information instead of throwing
+            throw std::system_error(errno, std::generic_category(), "Reading client fd from the pipe error");
+        }
+
+        int newClientFd = duplicateClientFd(decodedClientFd);
         clientPool.emplace_back(newClientFd);
         fdsToPoll.emplace_back(pollfd{newClientFd, POLLIN, 0});
+    } else if (pipeFlag == commandPipeFlag) {
+        uint16_t commandLen;
+        ssize_t bytesRead = read(getPipePollFd().fd, &commandLen, sizeof(commandLen));
+
+        bool hasDataAvailable = bytesRead != 0 && !(bytesRead == -1 && errno == EAGAIN);
+        if (!hasDataAvailable) {
+            // TODO: this shouldn't really happen, but maybe send back the error information instead of throwing
+            throw std::system_error(errno, std::generic_category(), "Reading command size from the pipe error");
+        }
+
+        char commandBuf[commandLen];
+        bytesRead = read(getPipePollFd().fd, commandBuf, commandLen);
+        hasDataAvailable = bytesRead != 0 && !(bytesRead == -1 && errno == EAGAIN);
+
+        if (!hasDataAvailable) {
+            // TODO: this shouldn't really happen, but maybe send back the error information instead of throwing
+            throw std::system_error(errno, std::generic_category(), "Reading command size from the pipe error");
+        }
+
+        setResponseSchemaFromCommand(std::string(commandBuf, commandLen));
+    }
+}
+
+void Server::setResponseSchemaFromCommand(std::string command) {
+    AbstractResponseSchema schema;
+
+    schema = ResponseSchemaFactory::createSchema(std::make_unique<RuntimeTokens>(command));
+    if (schema == nullptr) {
+        schema = ResponseSchemaFactory::createSchema(std::make_unique<StartupTokens>(command));
+    }
+
+    if (schema != nullptr) {
+        setResponseSchema(std::move(schema));
+    } else {
+        std::cout << "Server " << getpid() << ": Unknown response schema or its configuration" << std::endl;
     }
 }
 
@@ -106,7 +159,7 @@ int Server::pollFileDescriptors() {
 
 void Server::handleIncomingData() {
     if (getPipePollFd().revents & POLLIN) {
-        acceptIncomingClientConnections();
+        acceptPipeData();
     }
 
     for (size_t i = getClientFdStartIdx(), end = fdsToPoll.size(); i < end; i++) {

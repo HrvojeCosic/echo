@@ -9,12 +9,13 @@ using namespace echoserverclient;
 using namespace echoserver;
 
 class ServerTestFixture : public testing::Test {
-    protected:
+  protected:
     void SetUp() override {
         std::string pipeName = "testpipe";
         mkfifo(pipeName.c_str(), O_RDWR);
         server = std::make_unique<Server>(pipeName);
     }
+
     std::unique_ptr<Server> server;
 };
 

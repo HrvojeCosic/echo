@@ -1,4 +1,6 @@
 #include <csignal>
+#include <cstring>
+#include <fcntl.h>
 #include <iostream>
 #include <sys/socket.h>
 
@@ -26,12 +28,29 @@ CLI_COMMAND_TYPE void HelpCliCommand<APP_T>::execute([[maybe_unused]] AbstractTo
 }
 
 void ChangeResponseSchemaCliCommand::execute(AbstractTokens tokens) const {
-    auto responseSchema = echoserver::ResponseSchemaFactory::createSchema(std::move(tokens));
-    if (responseSchema != nullptr) {
-        app.setResponseSchema(std::move(responseSchema));
-        std::cout << "Response schema has been set" << std::endl;
-    } else {
-        std::cout << "Unknown response schema type or incorrect schema configuration" << std::endl;
+    auto servers = app.getServers();
+    for (int i = 0; i < servers.size(); i++) {
+        int pipeFd = open(app.serverIdToPipePath(app.getServerIdAtIdx(i)).c_str(), O_WRONLY);
+        if (pipeFd == -1) {
+            throw std::system_error(errno, std::generic_category(), "Failed to open the dispatcher->server pipe");
+        }
+
+        auto command = tokens->detokenize(' ');
+        uint16_t commandLen = command.size();
+
+        std::vector<std::byte> commandBuf;
+        commandBuf.resize(sizeof(echoserver::commandPipeFlag) + sizeof(commandLen) + commandLen);
+        commandBuf[0] = echoserver::commandPipeFlag;
+        std::memcpy(&commandBuf[sizeof(echoserver::commandPipeFlag)], &commandLen, sizeof(commandLen));
+        std::memcpy(&commandBuf[sizeof(echoserver::commandPipeFlag) + sizeof(commandLen)], command.c_str(), commandLen);
+
+        ssize_t bytesWritten = write(pipeFd, commandBuf.data(), commandBuf.size());
+        if (bytesWritten == -1) {
+            close(pipeFd);
+            throw std::system_error(errno, std::generic_category(), "Failed to write to the dispatcher->server pipe");
+        }
+
+        close(pipeFd);
     }
 }
 

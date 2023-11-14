@@ -9,7 +9,7 @@ class Tokens {
   public:
     virtual ~Tokens(){};
     Tokens(const std::vector<std::string> &tokens) : tokens(tokens){};
-    Tokens(std::string input, char delimiter);
+    Tokens(std::string input, char delimiter = ' ');
 
     /* Returns the token denoting the command's option (e.g --set-response-schema) if found in "tokens", otherwise
      * returns an empty string  */

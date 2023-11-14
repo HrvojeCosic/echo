@@ -12,7 +12,6 @@ const int startPort = 6000; // port of the dispatcher (server ports follow it)
 const std::string startUnixPath = "/tmp/unix_socket";
 const std::string startPipePath = "/tmp/fifo";
 
-using ResponseSchemaCliCommand = echoserverclient::ChangeResponseSchemaCliCommand;
 using InputToCommandMap = std::unordered_map<std::string, std::unique_ptr<echoserverclient::CliCommand<Dispatcher>>>;
 using DispatcherHelpCliCommand = echoserverclient::HelpCliCommand<Dispatcher>;
 
@@ -36,7 +35,17 @@ class Dispatcher : public Listener {
      */
     bool executeCommand(echoserverclient::AbstractTokens tokens);
 
-    void setResponseSchema(AbstractResponseSchema schema);
+    inline const std::vector<std::pair<int, int>> &getServers() { return servers; }
+
+    inline int getServerPidAtIdx(int idx) const { return servers[idx].first; }
+
+    inline int getServerIdAtIdx(int idx) const { return servers[idx].second; }
+
+    inline std::string serverIdToPipePath(int idx) const { return startPipePath + std::to_string(idx); }
+
+    inline std::string serverIdToUnixPath(int idx) const { return startUnixPath + std::to_string(idx); }
+
+    inline int serverIdToPort(int idx) const { return startPort + idx; }
 
   private:
     //-----------------------------------------------------------------------------------------------------------------------------
@@ -51,16 +60,6 @@ class Dispatcher : public Listener {
 
     /* inputToCommand maps user CLI inputs to their respective commands that hold command executors */
     InputToCommandMap inputToCommand;
-
-    inline int getServerPidAtIdx(int idx) { return servers[idx].first; }
-
-    inline int getServerIdAtIdx(int idx) { return servers[idx].second; }
-
-    inline std::string serverIdToPipePath(int idx) { return startPipePath + std::to_string(idx); }
-
-    inline std::string serverIdToUnixPath(int idx) { return startUnixPath + std::to_string(idx); }
-
-    inline int serverIdToPort(int idx) { return startPort + idx; }
 
     //-----------------------------------------------------------------------------------------------------------------------------
     int latestServerId = 0;
