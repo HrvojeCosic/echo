@@ -67,56 +67,43 @@ void Server::start() {
     }
 }
 
+template <typename T> ssize_t Server::readPipe(T *dest, std::string errorMsg, ssize_t size) {
+    ssize_t bytesRead = read(getPipePollFd().fd, dest, size);
+    bool errorOccurred = bytesRead == -1 && errno != EAGAIN;
+    bool hasDataAvailable = bytesRead != 0 && !(bytesRead == -1 && errno == EAGAIN);
+
+    if (errorOccurred) {
+        throw std::system_error(errno, std::generic_category(), errorMsg);
+    } else if (!hasDataAvailable) {
+        return 0;
+    }
+
+    return bytesRead;
+}
+
 void Server::acceptPipeData() {
     std::byte pipeFlag;
 
     while (true) {
-        ssize_t bytesRead = read(getPipePollFd().fd, &pipeFlag, sizeof(pipeFlag));
-        bool hasDataAvailable = bytesRead != 0 && !(bytesRead == -1 && errno == EAGAIN);
-        if (!hasDataAvailable) {
+        if (readPipe(&pipeFlag, "Reading pipe flag from the pipe error") == 0) {
             break;
-        } else if (bytesRead == -1) {
-            throw std::system_error(errno, std::generic_category(), "Reading pipe flag from the pipe error");
         }
 
-        decodePipeMessage(pipeFlag);
-    }
-}
+        if (pipeFlag == newClientFdPipeFlag) {
+            int decodedClientFd;
+            readPipe(&decodedClientFd, "Reading client fd from the pipe error");
 
-void Server::decodePipeMessage(std::byte pipeFlag) {
-    if (pipeFlag == newClientFdPipeFlag) {
-        int decodedClientFd;
-        ssize_t bytesRead = read(getPipePollFd().fd, &decodedClientFd, sizeof(decodedClientFd));
+            int newClientFd = duplicateClientFd(decodedClientFd);
+            clientPool.emplace_back(newClientFd);
+            fdsToPoll.emplace_back(pollfd{newClientFd, POLLIN, 0});
+        } else if (pipeFlag == commandPipeFlag) {
+            uint16_t commandLen;
+            readPipe(&commandLen, "Reading command length from the pipe error");
 
-        bool hasDataAvailable = bytesRead != 0 && !(bytesRead == -1 && errno == EAGAIN);
-        if (!hasDataAvailable) {
-            // TODO: this shouldn't really happen, but maybe send back the error information instead of throwing
-            throw std::system_error(errno, std::generic_category(), "Reading client fd from the pipe error");
+            char commandBuf[commandLen];
+            readPipe(commandBuf, "Reading command from the pipe error", commandLen);
+            setResponseSchemaFromCommand(std::string(commandBuf, commandLen));
         }
-
-        int newClientFd = duplicateClientFd(decodedClientFd);
-        clientPool.emplace_back(newClientFd);
-        fdsToPoll.emplace_back(pollfd{newClientFd, POLLIN, 0});
-    } else if (pipeFlag == commandPipeFlag) {
-        uint16_t commandLen;
-        ssize_t bytesRead = read(getPipePollFd().fd, &commandLen, sizeof(commandLen));
-
-        bool hasDataAvailable = bytesRead != 0 && !(bytesRead == -1 && errno == EAGAIN);
-        if (!hasDataAvailable) {
-            // TODO: this shouldn't really happen, but maybe send back the error information instead of throwing
-            throw std::system_error(errno, std::generic_category(), "Reading command size from the pipe error");
-        }
-
-        char commandBuf[commandLen];
-        bytesRead = read(getPipePollFd().fd, commandBuf, commandLen);
-        hasDataAvailable = bytesRead != 0 && !(bytesRead == -1 && errno == EAGAIN);
-
-        if (!hasDataAvailable) {
-            // TODO: this shouldn't really happen, but maybe send back the error information instead of throwing
-            throw std::system_error(errno, std::generic_category(), "Reading command size from the pipe error");
-        }
-
-        setResponseSchemaFromCommand(std::string(commandBuf, commandLen));
     }
 }
 

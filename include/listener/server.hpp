@@ -66,8 +66,6 @@ class Server : public Listener {
      * if necessary */
     int duplicateClientFd(int fd);
 
-    void decodePipeMessage(std::byte pipeFlag);
-
     /* Takes a command without knowing its type (runtime command / startup command) and sets the response schema
      * if it can be deduced from the command
      *
@@ -75,7 +73,10 @@ class Server : public Listener {
      */
     void setResponseSchemaFromCommand(std::string command);
 
-    template <typename T> ssize_t readPipe(T dest, std::string errorMsg);
+    /* Read "size" bytes into "dest" from the (dispatcher->server) pipe.
+     * Return bytes read. Throw a system error with "errorMsg" if necessary
+     */
+    template <typename T> ssize_t readPipe(T *dest, std::string errorMsg, ssize_t size = sizeof(T));
 
     //-----------------------------------------------------------------------------------------------------------------------------
     /* name of the pipe from which the server receives new client socket file descriptors from the dispatcher */
