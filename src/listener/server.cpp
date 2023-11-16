@@ -12,8 +12,6 @@
 
 namespace echo {
 
-using namespace echo;
-
 namespace {
 volatile std::sig_atomic_t serverShutdownRequested = false;
 const int maxClients = 50;

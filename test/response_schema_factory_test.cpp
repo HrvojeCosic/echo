@@ -2,7 +2,7 @@
 #include "listener/response_schema_factory.hpp"
 #include <gtest/gtest.h>
 
-using namespace echo;
+namespace echo {
 
 class ResponseSchemaFactoryTestFixture : public testing::Test {
   protected:
@@ -46,3 +46,4 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+} // namespace echo

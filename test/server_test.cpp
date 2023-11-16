@@ -4,7 +4,7 @@
 #include "listener/server.hpp"
 #include "socket/socket_factory.hpp"
 
-using namespace echo;
+namespace echo {
 
 class ServerTestFixture : public testing::Test {
   protected:
@@ -56,3 +56,4 @@ int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+} // namespace echo

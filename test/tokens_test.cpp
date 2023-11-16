@@ -1,7 +1,7 @@
 #include "CLI/tokens.hpp"
 #include <gtest/gtest.h>
 
-using namespace echo;
+namespace echo {
 
 TEST(Tokens, StartupTokensTokenizeAndDetokenize) {
     std::string inputStartup = "./executable --option choice argument";
@@ -32,3 +32,4 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+} // namespace echo
