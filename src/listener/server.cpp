@@ -6,6 +6,7 @@
 #include <system_error>
 #include <unistd.h>
 
+#include "listener/response_schema.hpp"
 #include "listener/response_schema_factory.hpp"
 #include "listener/server.hpp"
 
@@ -24,7 +25,8 @@ void Server::signalHandler(int signum) {
     }
 }
 
-Server::Server(std::string pipeName) : pipeName(pipeName) {
+Server::Server(std::string pipeName)
+    : responseSchema(std::make_unique<EquivalentResponseSchema>()), pipeName(pipeName) {
     int pipeFd = open(pipeName.c_str(), O_RDWR);
 
     if (pipeFd == -1) {
@@ -37,8 +39,6 @@ Server::Server(std::string pipeName) : pipeName(pipeName) {
     if (fcntlRes == -1) {
         throw std::system_error(errno, std::generic_category(), "Setting pipe mode to non-blocking error");
     }
-
-    responseSchema = std::make_unique<EquivalentResponseSchema>();
 }
 
 Server::~Server() {

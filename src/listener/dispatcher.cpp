@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <iostream>
 #include <memory>
+#include <sys/prctl.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <system_error>
@@ -68,6 +69,7 @@ void Dispatcher::startServer() {
 
     std::string pipeName = serverIdToPipePath(latestServerId);
     mkfifo(pipeName.c_str(), O_RDWR);
+    chmod(pipeName.c_str(), S_IRUSR | S_IWUSR);
 
     int pid = fork();
 
@@ -86,6 +88,12 @@ void Dispatcher::startServer() {
         std::exit(0);
     } else {
         // Parent process
+
+        // Disable Yama security module for the parent process
+        // https://manpages.ubuntu.com/manpages/focal/en/man2/prctl.2.html
+        // https://stackoverflow.com/questions/75045206/eperm-on-pidfd-getfd-with-socket/76114536#76114536
+        prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY);
+
         servers.push_back(std::make_pair(pid, latestServerId));
     }
 }

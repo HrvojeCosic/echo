@@ -9,8 +9,9 @@ using namespace echo;
 class ServerTestFixture : public testing::Test {
   protected:
     void SetUp() override {
-        std::string pipeName = "testpipe";
+        std::string pipeName = "/tmp/testpipe";
         mkfifo(pipeName.c_str(), O_RDWR);
+        chmod(pipeName.c_str(), S_IRUSR | S_IWUSR);
         server = std::make_unique<Server>(pipeName);
     }
 
