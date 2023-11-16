@@ -29,7 +29,7 @@ void InetSocket::bind() {
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     serverAddr.sin_port = htons(port);
 
-    if (::bind(socketFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
+    if (::bind(socketFd, reinterpret_cast<struct sockaddr *>(&serverAddr), sizeof(serverAddr)) == -1) {
         throw std::system_error(errno, std::generic_category(), "Failed to bind the internet domain socket");
     }
 }
@@ -39,7 +39,7 @@ int InetSocket::setupNewConnection() {
 
     socklen_t clientAddrLen = sizeof(clientAddr);
 
-    int clientSocket = accept(socketFd, (struct sockaddr *)&clientAddr, &clientAddrLen);
+    int clientSocket = accept(socketFd, reinterpret_cast<struct sockaddr *>(&clientAddr), &clientAddrLen);
     if (clientSocket == INVALID_SOCKET_FD) {
         throw std::system_error(errno, std::generic_category(), "Failed to accept a new internet socket connection");
     }
@@ -70,7 +70,7 @@ void InetSocket::connectToServer(const std::string &serverAddress) {
     serverSockAddr.sin_port = htons(port);
     inet_pton(AF_INET, serverAddress.c_str(), &serverSockAddr.sin_addr);
 
-    if (connect(socketFd, (struct sockaddr *)&serverSockAddr, sizeof(serverSockAddr)) == -1) {
+    if (connect(socketFd, reinterpret_cast<struct sockaddr *>(&serverSockAddr), sizeof(serverSockAddr)) == -1) {
         throw std::system_error(errno, std::generic_category(), "Failed to connect to the Internet server");
     }
 }
