@@ -7,7 +7,7 @@
 
 #include "socket/socket.hpp"
 
-namespace echoserverclient {
+namespace echo {
 
 UnixSocket::UnixSocket(const std::string path) : socketPath(path) {
     socketFd = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -59,4 +59,4 @@ void UnixSocket::connectToServer(const std::string &serverAddress) {
         throw std::system_error(errno, std::generic_category(), "Failed to connect to the Unix Domain server");
     }
 }
-} // namespace echoserverclient
+} // namespace echo

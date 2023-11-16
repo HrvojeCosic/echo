@@ -1,8 +1,8 @@
 #include "listener/response_schema_factory.hpp"
 
-namespace echoserver {
+namespace echo {
 
-AbstractResponseSchema ResponseSchemaFactory::createSchema(echoserverclient::AbstractTokens tokens) {
+AbstractResponseSchema ResponseSchemaFactory::createSchema(AbstractTokens tokens) {
     std::string schemaType = tokens->getChoice();
 
     if (schemaType == "EQUIVALENT") {
@@ -29,4 +29,4 @@ AbstractResponseSchema ResponseSchemaFactory::createSchema(echoserverclient::Abs
     }
 }
 
-} // namespace echoserver
+} // namespace echo

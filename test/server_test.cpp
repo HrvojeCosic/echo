@@ -4,9 +4,7 @@
 #include "listener/server.hpp"
 #include "socket/socket_factory.hpp"
 
-using namespace echoclient;
-using namespace echoserverclient;
-using namespace echoserver;
+using namespace echo;
 
 class ServerTestFixture : public testing::Test {
   protected:

@@ -9,9 +9,9 @@
 #include "listener/response_schema_factory.hpp"
 #include "listener/server.hpp"
 
-namespace echoserver {
+namespace echo {
 
-using namespace echoserverclient;
+using namespace echo;
 
 namespace {
 volatile std::sig_atomic_t serverShutdownRequested = false;
@@ -155,7 +155,7 @@ void Server::handleIncomingData() {
         }
 
         int clientSocket = fdsToPoll[i].fd;
-        char buffer[echoserverclient::bufferSize];
+        char buffer[bufferSize];
         int bytesRead = receiveFromClient(i, buffer);
 
         if (bytesRead == 0) {
@@ -171,7 +171,7 @@ void Server::handleIncomingData() {
 }
 
 int Server::receiveFromClient(int pollFdIdx, char *buffer) {
-    int bytesRead = recv(fdsToPoll[pollFdIdx].fd, buffer, echoserverclient::bufferSize, 0);
+    int bytesRead = recv(fdsToPoll[pollFdIdx].fd, buffer, bufferSize, 0);
     if (bytesRead == -1) {
         throw std::system_error(errno, std::generic_category(), "Error reading from client");
     }
@@ -188,4 +188,4 @@ void Server::closeClientConnection(int pollFdIdx) {
     fdsToPoll.erase(fdsToPoll.begin() + pollFdIdx);
     clientPool.erase(clientPool.begin() + (pollFdIdx - getClientFdStartIdx()));
 }
-} // namespace echoserver
+} // namespace echo

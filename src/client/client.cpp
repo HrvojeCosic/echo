@@ -5,7 +5,7 @@
 
 #include "client/client.hpp"
 
-namespace echoclient {
+namespace echo {
 
 namespace {
 std::atomic_flag clientShutdownFlag = ATOMIC_FLAG_INIT;
@@ -13,7 +13,7 @@ std::condition_variable clientShutdownCV;
 std::mutex clientShutdownMutex;
 } // namespace
 
-Client::Client(echoserverclient::AbstractSocket socket) : clientSocket(std::move(socket)) {
+Client::Client(AbstractSocket socket) : clientSocket(std::move(socket)) {
     inputToCommand["--help"] = std::make_unique<ClientHelpCliCommand>(*this);
     inputToCommand["send-to-server"] = std::make_unique<SendToServerCliCommand>(*this);
 };
@@ -25,7 +25,7 @@ void Client::signalHandler(int signum) {
     }
 }
 
-bool Client::executeCommand(echoserverclient::AbstractTokens tokens) {
+bool Client::executeCommand(AbstractTokens tokens) {
     auto command = tokens->getOption();
     bool exists = inputToCommand.find(command) != inputToCommand.end();
 
@@ -46,7 +46,7 @@ void Client::cliInputHandler(std::stop_token token) {
             break;
         }
 
-        auto tokens = std::make_unique<echoserverclient::RuntimeTokens>(userInput, ' ');
+        auto tokens = std::make_unique<RuntimeTokens>(userInput);
         auto optionToken = tokens->getOption();
         if (inputToCommand.contains(optionToken)) {
             inputToCommand[optionToken]->execute(std::move(tokens));
@@ -69,4 +69,4 @@ void Client::start() {
     std::cout << "\nClient closed." << std::endl;
 }
 
-} // namespace echoclient
+} // namespace echo

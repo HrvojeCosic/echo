@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-namespace echoserverclient {
+namespace echo {
 
 class Tokens {
   public:
@@ -58,4 +58,4 @@ class StartupTokens : public Tokens {
 };
 
 using AbstractTokens = std::unique_ptr<Tokens>;
-} // namespace echoserverclient
+} // namespace echo

@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace echoserver {
+namespace echo {
 
 class IResponseSchema {
   public:
@@ -35,4 +35,4 @@ class PalindromeResponseSchema : public IResponseSchema {
   public:
     void generateResponse(std::string &message) override;
 };
-} // namespace echoserver
+} // namespace echo

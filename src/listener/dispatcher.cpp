@@ -13,7 +13,7 @@
 
 #include "listener/dispatcher.hpp"
 
-namespace echoserver {
+namespace echo {
 
 namespace {
 volatile std::sig_atomic_t shutdownRequested = false;
@@ -22,8 +22,8 @@ volatile std::sig_atomic_t shutdownRequested = false;
 Dispatcher::Dispatcher(int initServerCount) {
     servers.reserve(initServerCount);
 
-    this->addListenerSocket(std::make_unique<echoserverclient::InetSocket>(startPort));
-    this->addListenerSocket(std::make_unique<echoserverclient::UnixSocket>(startUnixPath));
+    this->addListenerSocket(std::make_unique<InetSocket>(startPort));
+    this->addListenerSocket(std::make_unique<UnixSocket>(startUnixPath));
 
     while (--initServerCount >= 0) {
         startServer();
@@ -79,9 +79,8 @@ void Dispatcher::startServer() {
         // After the server is finished running, clean it up and exit out of the child process
         {
             Server server(pipeName);
-            server.addListenerSocket(
-                std::make_unique<echoserverclient::UnixSocket>(serverIdToUnixPath(latestServerId)));
-            server.addListenerSocket(std::make_unique<echoserverclient::InetSocket>(serverIdToPort(latestServerId)));
+            server.addListenerSocket(std::make_unique<UnixSocket>(serverIdToUnixPath(latestServerId)));
+            server.addListenerSocket(std::make_unique<InetSocket>(serverIdToPort(latestServerId)));
             server.start();
         }
         std::exit(0);
@@ -129,7 +128,7 @@ void Dispatcher::cliInputHandler(std::stop_token token) {
         if (userInput.length() == 0)
             continue;
 
-        auto tokens = std::make_unique<echoserverclient::RuntimeTokens>(userInput, ' ');
+        auto tokens = std::make_unique<RuntimeTokens>(userInput);
         auto optionToken = tokens->getOption();
         if (inputToCommand.contains(optionToken)) {
             inputToCommand[optionToken]->execute(std::move(tokens));
@@ -139,7 +138,7 @@ void Dispatcher::cliInputHandler(std::stop_token token) {
     }
 }
 
-bool Dispatcher::executeCommand(echoserverclient::AbstractTokens tokens) {
+bool Dispatcher::executeCommand(AbstractTokens tokens) {
     auto command = tokens->getOption();
     bool exists = inputToCommand.find(command) != inputToCommand.end();
 
@@ -150,4 +149,4 @@ bool Dispatcher::executeCommand(echoserverclient::AbstractTokens tokens) {
     return exists;
 }
 
-} // namespace echoserver
+} // namespace echo

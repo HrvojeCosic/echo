@@ -9,12 +9,12 @@
 #include "listener/response_schema.hpp"
 #include "socket/socket.hpp"
 
-namespace echoserver {
+namespace echo {
 
 const std::byte newClientFdPipeFlag = std::byte(0x01);
 const std::byte commandPipeFlag = std::byte(0x02);
 
-using ResponseSchemaCliCommand = echoserverclient::ChangeResponseSchemaCliCommand;
+using ResponseSchemaCliCommand = ChangeResponseSchemaCliCommand;
 using AbstractResponseSchema = std::unique_ptr<IResponseSchema>;
 
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -95,4 +95,4 @@ class Server : public Listener {
     std::vector<struct pollfd> fdsToPoll;
     //-----------------------------------------------------------------------------------------------------------------------------
 };
-} // namespace echoserver
+} // namespace echo

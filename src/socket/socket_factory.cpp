@@ -3,7 +3,7 @@
 
 #include "socket/socket_factory.hpp"
 
-namespace echoserverclient {
+namespace echo {
 
 AbstractSocket SocketFactory::createClientSocket(int argc, char *argv[]) {
     std::vector<std::string> allArgs(argv, argv + argc);
@@ -28,4 +28,4 @@ AbstractSocket SocketFactory::createClientSocket(int argc, char *argv[]) {
     return socket;
 }
 
-} // namespace echoserverclient
+} // namespace echo

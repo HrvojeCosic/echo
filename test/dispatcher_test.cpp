@@ -2,9 +2,9 @@
 
 #include "listener/dispatcher.hpp"
 
-using namespace echoclient;
-using namespace echoserverclient;
-using namespace echoserver;
+using namespace echo;
+using namespace echo;
+using namespace echo;
 
 class DispatcherTestFixture : public testing::Test {};
 

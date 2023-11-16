@@ -8,11 +8,11 @@
 #include "listener/dispatcher.hpp"
 #include "listener/response_schema_factory.hpp"
 
-namespace echoserverclient {
+namespace echo {
 
 // TODO: maybe support futher help parameters (e.g --help change-response-schema)?
 CLI_COMMAND_TYPE void HelpCliCommand<APP_T>::execute([[maybe_unused]] AbstractTokens tokens) const {
-    if constexpr (std::same_as<APP_T, echoserver::Dispatcher>) {
+    if constexpr (std::same_as<APP_T, Dispatcher>) {
         std::cout << "Usage: " << std::endl;
         std::cout << "On startup: "
                   << "sudo ./dispatcher [OPTION]" << std::endl;
@@ -20,7 +20,7 @@ CLI_COMMAND_TYPE void HelpCliCommand<APP_T>::execute([[maybe_unused]] AbstractTo
                   << "[OPTION]" << std::endl;
         std::cout << "--set-response-schema "
                   << "EQUIVALENT/REVERSE/CENSORED CHAR=c/PALINDROME" << std::endl;
-    } else if constexpr (std::same_as<APP_T, echoclient::Client>) {
+    } else if constexpr (std::same_as<APP_T, Client>) {
         std::string correctFormat = " (<Unix_domain_socket_address> | <Internet_domain_address> <port_number>)";
         std::cout << "Usage: "
                   << "./echo_client " << correctFormat << std::endl;
@@ -39,10 +39,10 @@ void ChangeResponseSchemaCliCommand::execute(AbstractTokens tokens) const {
         uint16_t commandLen = command.size();
 
         std::vector<std::byte> commandBuf;
-        commandBuf.resize(sizeof(echoserver::commandPipeFlag) + sizeof(commandLen) + commandLen);
-        commandBuf[0] = echoserver::commandPipeFlag;
-        std::memcpy(&commandBuf[sizeof(echoserver::commandPipeFlag)], &commandLen, sizeof(commandLen));
-        std::memcpy(&commandBuf[sizeof(echoserver::commandPipeFlag) + sizeof(commandLen)], command.c_str(), commandLen);
+        commandBuf.resize(sizeof(commandPipeFlag) + sizeof(commandLen) + commandLen);
+        commandBuf[0] = commandPipeFlag;
+        std::memcpy(&commandBuf[sizeof(commandPipeFlag)], &commandLen, sizeof(commandLen));
+        std::memcpy(&commandBuf[sizeof(commandPipeFlag) + sizeof(commandLen)], command.c_str(), commandLen);
 
         ssize_t bytesWritten = write(pipeFd, commandBuf.data(), commandBuf.size());
         if (bytesWritten == -1) {
@@ -55,7 +55,7 @@ void ChangeResponseSchemaCliCommand::execute(AbstractTokens tokens) const {
 }
 
 void SendToServerCliCommand::execute(AbstractTokens tokens) const {
-    char buffer[echoserverclient::bufferSize];
+    char buffer[bufferSize];
     int clientFd = app.getClientSocket()->getsocketFd();
     std::string userInput = tokens->detokenize(' ');
 
@@ -67,7 +67,7 @@ void SendToServerCliCommand::execute(AbstractTokens tokens) const {
     int bytesRead = recv(clientFd, buffer, sizeof(buffer), 0);
     if (bytesRead <= 0) {
         std::cout << "Connection to the server terminated." << std::endl;
-        echoclient::Client::signalHandler(SIGTERM);
+        Client::signalHandler(SIGTERM);
         return;
     }
 
@@ -75,9 +75,9 @@ void SendToServerCliCommand::execute(AbstractTokens tokens) const {
     std::cout << "Server Response: " << response << std::endl;
 }
 
-template class CliCommand<echoserver::Dispatcher>;
-template class CliCommand<echoclient::Client>;
-template class HelpCliCommand<echoserver::Dispatcher>;
-template class HelpCliCommand<echoclient::Client>;
+template class CliCommand<Dispatcher>;
+template class CliCommand<Client>;
+template class HelpCliCommand<Dispatcher>;
+template class HelpCliCommand<Client>;
 
-} // namespace echoserverclient
+} // namespace echo

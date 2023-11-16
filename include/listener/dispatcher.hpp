@@ -6,14 +6,14 @@
 #include "listener/listener.hpp"
 #include "listener/server.hpp"
 
-namespace echoserver {
+namespace echo {
 
 const int startPort = 6000; // port of the dispatcher (server ports follow it)
 const std::string startUnixPath = "/tmp/unix_socket";
 const std::string startPipePath = "/tmp/fifo";
 
-using InputToCommandMap = std::unordered_map<std::string, std::unique_ptr<echoserverclient::CliCommand<Dispatcher>>>;
-using DispatcherHelpCliCommand = echoserverclient::HelpCliCommand<Dispatcher>;
+using InputToCommandMap = std::unordered_map<std::string, std::unique_ptr<CliCommand<Dispatcher>>>;
+using DispatcherHelpCliCommand = HelpCliCommand<Dispatcher>;
 
 //-----------------------------------------------------------------------------------------------------------------------------
 class Dispatcher : public Listener {
@@ -33,7 +33,7 @@ class Dispatcher : public Listener {
     /* Executes the command found in "tokens" if command has been setup inside "inputToCommand".
      * Returns true if command has been found, false otherwise
      */
-    bool executeCommand(echoserverclient::AbstractTokens tokens);
+    bool executeCommand(AbstractTokens tokens);
 
     inline const std::vector<std::pair<int, int>> &getServers() { return servers; }
 
@@ -72,4 +72,4 @@ class Dispatcher : public Listener {
     // TODO: consider using pidfd instead of the pid for better safety
     std::vector<std::pair<int, int>> servers;
 };
-} // namespace echoserver
+} // namespace echo

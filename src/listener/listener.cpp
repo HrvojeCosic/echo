@@ -4,7 +4,7 @@
 
 #include "listener/listener.hpp"
 
-namespace echoserver {
+namespace echo {
 
 namespace {
 const int listenerQueueSize = 50;
@@ -14,14 +14,14 @@ Listener::~Listener() {
     for (auto &listener : getListenerPool()) {
         close(listener->getsocketFd());
 
-        auto uds = dynamic_cast<echoserverclient::UnixSocket *>(listener.get());
+        auto uds = dynamic_cast<UnixSocket *>(listener.get());
         if (uds) {
             unlink(uds->getSocketPath().c_str());
         }
     }
 }
 
-void Listener::addListenerSocket(echoserverclient::AbstractSocket listener) {
+void Listener::addListenerSocket(AbstractSocket listener) {
     try {
         listener->bind();
         listener->initOptions(listener->getsocketFd());
@@ -33,7 +33,7 @@ void Listener::addListenerSocket(echoserverclient::AbstractSocket listener) {
 }
 
 void Listener::prepareListenerSockets() {
-    for (echoserverclient::AbstractSocket &listener : listenerPool) {
+    for (AbstractSocket &listener : listenerPool) {
         if (listen(listener->getsocketFd(), listenerQueueSize) == -1) {
             throw std::system_error(errno, std::generic_category(),
                                     "Failed to prepare for conection acceptance from dispatcher listener socket");
@@ -48,4 +48,4 @@ int Listener::pollListenerSockets() {
     }
     return numReady;
 }
-} // namespace echoserver
+} // namespace echo

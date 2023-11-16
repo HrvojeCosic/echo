@@ -2,13 +2,12 @@
 #include "listener/response_schema_factory.hpp"
 #include <gtest/gtest.h>
 
-using namespace echoserverclient;
-using namespace echoserver;
+using namespace echo;
 
 class ResponseSchemaFactoryTestFixture : public testing::Test {
   protected:
     AbstractResponseSchema createSchemaFromInput(std::string input) {
-        AbstractTokens tokens = std::make_unique<RuntimeTokens>(input, ' ');
+        AbstractTokens tokens = std::make_unique<RuntimeTokens>(input);
         AbstractResponseSchema schema = ResponseSchemaFactory::createSchema(std::move(tokens));
         return schema;
     }

@@ -6,19 +6,19 @@
 #include "./tokens.hpp"
 
 // Forward declarations to avoid circular deps
-namespace echoclient {
+namespace echo {
 class Client;
 }
 
-namespace echoserver {
+namespace echo {
 class Dispatcher;
 }
 
 #define CLI_COMMAND_TYPE                                                                                               \
     template <typename APP_T>                                                                                          \
-    requires(std::same_as<APP_T, echoserver::Dispatcher> || std::same_as<APP_T, echoclient::Client>)
+    requires(std::same_as<APP_T, Dispatcher> || std::same_as<APP_T, Client>)
 
-namespace echoserverclient {
+namespace echo {
 
 CLI_COMMAND_TYPE class CliCommand {
   public:
@@ -39,17 +39,17 @@ CLI_COMMAND_TYPE class HelpCliCommand : public CliCommand<APP_T> {
     void execute(AbstractTokens tokens) const override;
 };
 
-class ChangeResponseSchemaCliCommand : public CliCommand<echoserver::Dispatcher> {
+class ChangeResponseSchemaCliCommand : public CliCommand<Dispatcher> {
   public:
-    ChangeResponseSchemaCliCommand(echoserver::Dispatcher &app) : CliCommand<echoserver::Dispatcher>(app){};
+    ChangeResponseSchemaCliCommand(Dispatcher &app) : CliCommand<Dispatcher>(app){};
 
     void execute(AbstractTokens tokens) const override;
 };
 
-class SendToServerCliCommand : public CliCommand<echoclient::Client> {
+class SendToServerCliCommand : public CliCommand<Client> {
   public:
-    SendToServerCliCommand(echoclient::Client &app) : CliCommand<echoclient::Client>(app){};
+    SendToServerCliCommand(Client &app) : CliCommand<Client>(app){};
 
     void execute(AbstractTokens tokens) const override;
 };
-} // namespace echoserverclient
+} // namespace echo

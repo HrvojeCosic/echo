@@ -2,7 +2,7 @@
 
 #include "listener/response_schema.hpp"
 
-namespace echoserver {
+namespace echo {
 
 void EquivalentResponseSchema::generateResponse([[maybe_unused]] std::string &message) { return; }
 
@@ -36,4 +36,4 @@ void PalindromeResponseSchema::generateResponse(std::string &message) {
 
     message = "This message is a palindrome :)";
 }
-} // namespace echoserver
+} // namespace echo

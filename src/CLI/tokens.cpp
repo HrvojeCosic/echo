@@ -2,7 +2,7 @@
 
 #include "CLI/tokens.hpp"
 
-namespace echoserverclient {
+namespace echo {
 
 Tokens::Tokens(std::string input, char delimiter) {
     std::istringstream iss(input);
@@ -24,4 +24,4 @@ std::string Tokens::detokenize(char delimiter) {
     }
     return result;
 }
-} // namespace echoserverclient
+} // namespace echo

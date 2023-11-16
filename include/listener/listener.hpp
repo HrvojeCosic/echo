@@ -4,16 +4,16 @@
 #include <sys/poll.h>
 #include <vector>
 
-namespace echoserver {
+namespace echo {
 
 class Listener {
   public:
     virtual ~Listener();
 
     /* Sets up the "listener" and adds it to the tracked socket state */
-    void addListenerSocket(echoserverclient::AbstractSocket listener);
+    void addListenerSocket(AbstractSocket listener);
 
-    inline const std::vector<echoserverclient::AbstractSocket> &getListenerPool() const { return listenerPool; }
+    inline const std::vector<AbstractSocket> &getListenerPool() const { return listenerPool; }
 
   protected:
     //-----------------------------------------------------------------------------------------------------------------------------
@@ -30,9 +30,9 @@ class Listener {
     //-----------------------------------------------------------------------------------------------------------------------------
 
     /* Sockets listening for requests */
-    std::vector<echoserverclient::AbstractSocket> listenerPool;
+    std::vector<AbstractSocket> listenerPool;
 
     /* listener fds to poll for events */
     std::vector<struct pollfd> listenerFds;
 };
-} // namespace echoserver
+} // namespace echo

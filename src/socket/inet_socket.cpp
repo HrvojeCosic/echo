@@ -8,7 +8,7 @@
 
 #include "socket/socket.hpp"
 
-namespace echoserverclient {
+namespace echo {
 
 InetSocket::InetSocket(int port) : port(port) {
     socketFd = socket(AF_INET, SOCK_STREAM, 0);
@@ -74,4 +74,4 @@ void InetSocket::connectToServer(const std::string &serverAddress) {
         throw std::system_error(errno, std::generic_category(), "Failed to connect to the Internet server");
     }
 }
-} // namespace echoserverclient
+} // namespace echo

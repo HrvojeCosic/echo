@@ -4,7 +4,7 @@
 
 #define INVALID_SOCKET_FD -1
 
-namespace echoserverclient {
+namespace echo {
 
 const int bufferSize = 1024;
 
@@ -64,5 +64,5 @@ class InetSocket : public ISocket {
     int port;
 };
 
-using AbstractSocket = std::unique_ptr<echoserverclient::ISocket>;
-} // namespace echoserverclient
+using AbstractSocket = std::unique_ptr<ISocket>;
+} // namespace echo

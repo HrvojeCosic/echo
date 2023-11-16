@@ -1,7 +1,7 @@
 #include "CLI/tokens.hpp"
 #include <gtest/gtest.h>
 
-using namespace echoserverclient;
+using namespace echo;
 
 TEST(Tokens, StartupTokensTokenizeAndDetokenize) {
     std::string inputStartup = "./executable --option choice argument";
