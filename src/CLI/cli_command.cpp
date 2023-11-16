@@ -13,11 +13,11 @@ namespace echo {
 // TODO: maybe support futher help parameters (e.g --help change-response-schema)?
 CLI_COMMAND_TYPE void HelpCliCommand<APP_T>::execute([[maybe_unused]] AbstractTokens tokens) const {
     if constexpr (std::same_as<APP_T, Dispatcher>) {
-        std::cout << "Usage: " << std::endl;
+        std::cout << "Usage: \n";
         std::cout << "On startup: "
-                  << "sudo ./dispatcher [OPTION]" << std::endl;
+                  << "sudo ./dispatcher [OPTION]\n";
         std::cout << "During runtime: "
-                  << "[OPTION]" << std::endl;
+                  << "[OPTION]";
         std::cout << "--set-response-schema "
                   << "EQUIVALENT/REVERSE/CENSORED CHAR=c/PALINDROME" << std::endl;
     } else if constexpr (std::same_as<APP_T, Client>) {
