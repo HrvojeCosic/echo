@@ -36,7 +36,7 @@ void Listener::prepareListenerSockets() {
     for (AbstractSocket &listener : listenerPool) {
         if (listen(listener->getsocketFd(), listenerQueueSize) == -1) {
             throw std::system_error(errno, std::generic_category(),
-                                    "Failed to prepare for conection acceptance from dispatcher listener socket");
+                                    "Failed to prepare for conection acceptance the listener socket");
         }
     }
 }

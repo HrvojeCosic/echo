@@ -53,8 +53,6 @@ void Server::start() {
     std::signal(SIGTERM, Server::signalHandler);
 
     try {
-        prepareListenerSockets();
-
         while (!serverShutdownRequested) {
             if (pollFileDescriptors() > 0) {
                 handleIncomingData();
