@@ -104,11 +104,12 @@ void Server::acceptPipeData() {
 }
 
 void Server::setResponseSchemaFromCommand(std::string command) {
+    ResponseSchemaFactory schemaFactory;
     AbstractResponseSchema schema;
 
-    schema = ResponseSchemaFactory::createSchema(std::make_unique<RuntimeTokens>(command));
+    schema = schemaFactory.createSchema(std::make_unique<RuntimeTokens>(command));
     if (schema == nullptr) {
-        schema = ResponseSchemaFactory::createSchema(std::make_unique<StartupTokens>(command));
+        schema = schemaFactory.createSchema(std::make_unique<StartupTokens>(command));
     }
 
     if (schema != nullptr) {
