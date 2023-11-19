@@ -4,26 +4,24 @@ namespace echo {
 
 AbstractResponseSchema ResponseSchemaFactory::createSchema(const AbstractTokens &tokens) {
     switch (getSchemaType(tokens->getChoice())) {
-        case SchemaType::EQUIVALENT:
-            return std::make_unique<EquivalentResponseSchema>();
-        case SchemaType::REVERSE:
-            return std::make_unique<ReverseResponseSchema>();
-        case SchemaType::CENSORED:
-            return newCensoredSchema(tokens);
-        case SchemaType::PALINDROME:
-            return std::make_unique<PalindromeResponseSchema>();
-        default:
-            return nullptr;
+    case SchemaType::EQUIVALENT:
+        return std::make_unique<EquivalentResponseSchema>();
+    case SchemaType::REVERSE:
+        return std::make_unique<ReverseResponseSchema>();
+    case SchemaType::CENSORED:
+        return newCensoredSchema(tokens);
+    case SchemaType::PALINDROME:
+        return std::make_unique<PalindromeResponseSchema>();
+    default:
+        return nullptr;
     }
 }
 
-SchemaType ResponseSchemaFactory::getSchemaType(const std::string& schemaType) {
-    static const std::unordered_map<std::string, SchemaType> choiceToType = {
-        {"EQUIVALENT", SchemaType::EQUIVALENT},
-        {"REVERSE", SchemaType::REVERSE},
-        {"CENSORED", SchemaType::CENSORED},
-        {"PALINDROME", SchemaType::PALINDROME}
-    };
+SchemaType ResponseSchemaFactory::getSchemaType(const std::string &schemaType) {
+    static const std::unordered_map<std::string, SchemaType> choiceToType = {{"EQUIVALENT", SchemaType::EQUIVALENT},
+                                                                             {"REVERSE", SchemaType::REVERSE},
+                                                                             {"CENSORED", SchemaType::CENSORED},
+                                                                             {"PALINDROME", SchemaType::PALINDROME}};
 
     auto it = choiceToType.find(schemaType);
     if (it != choiceToType.end()) {

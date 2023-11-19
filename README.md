@@ -1,3 +1,13 @@
+## Overview
+Server-client architecture written for Linux (5.6 or higher), including features such as:
+* Multiple server support with the load balancing layer dispatching incoming connections using serialized inter-process communication
+* Extensible listener socket options, supporting Internet and Unix domain sockets
+* I/O multiplexing for handling concurrent client connections
+* Startup and runtime configurable server response generation algorithms
+
+<br>
+<img src="images/architecture.png" alt="echo architecture" width="500"/>
+
 ## Usage
 * Build the project using `./scripts/build.sh`
 

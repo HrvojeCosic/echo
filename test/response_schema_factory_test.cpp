@@ -2,13 +2,14 @@
 #include "listener/response_schema_factory.hpp"
 #include <gtest/gtest.h>
 
-namespace echo {
+using namespace echo;
 
 class ResponseSchemaFactoryTestFixture : public testing::Test {
   protected:
     AbstractResponseSchema createSchemaFromInput(std::string input) {
+        ResponseSchemaFactory factory;
         AbstractTokens tokens = std::make_unique<RuntimeTokens>(input);
-        AbstractResponseSchema schema = ResponseSchemaFactory::createSchema(std::move(tokens));
+        AbstractResponseSchema schema = factory.createSchema(std::move(tokens));
         return schema;
     }
 };
@@ -46,4 +47,3 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-} // namespace echo

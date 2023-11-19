@@ -12,13 +12,7 @@ class IResponseSchema {
     virtual void generateResponse(std::string &message) = 0;
 };
 
-enum class SchemaType {
-  EQUIVALENT,
-  REVERSE,
-  CENSORED,
-  PALINDROME,
-  UNKNOWN
-};
+enum class SchemaType { EQUIVALENT, REVERSE, CENSORED, PALINDROME, UNKNOWN };
 
 class EquivalentResponseSchema : public IResponseSchema {
   public:

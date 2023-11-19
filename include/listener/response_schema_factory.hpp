@@ -13,7 +13,7 @@ class ResponseSchemaFactory {
 
   private:
     /* Returns schema type based on the "choice" string (reduces number of string comparisons in the factory) */
-    SchemaType getSchemaType(const std::string& choice);
+    SchemaType getSchemaType(const std::string &choice);
 
     std::unique_ptr<CensoredResponseSchema> newCensoredSchema(const AbstractTokens &tokens);
 };
